@@ -16,7 +16,6 @@
     "text_layer": true
   },
   "grounded": 3,
-  "grounded_at": "2026-10-31T04:40:40+00:00",
   "pdf": {
     "case_relative": true,
     "path": "paper.pdf",
@@ -42,5 +41,5 @@
       "status": "grounded"
     }
   },
-  "schema_version": "geoarg/ground/0.1"
+  "schema_version": "geoarg/ground/0.2"
 }
