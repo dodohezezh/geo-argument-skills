@@ -9,7 +9,7 @@
 | Situation | rho |
 | --- | --- |
 | shared calibration product (timescale, plate model, DEM, data release) | 0.75 |
-| same `independence_class` (physical, method, data) | 0.45 to 0.75 by class |
+| same `independence_class` | 0.15 (physical), 0.45 (method), 0.60 (data) |
 | same evidence family only | 0.35 |
 | no shared source, different family | 0.05 |
 

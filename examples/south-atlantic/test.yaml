@@ -15,6 +15,7 @@ records:
       is_blind: false
     discriminating_power: medium
     status: planned
+    cost: 3
 
   - id: T2
     name: 断裂带小圆与欧拉极一致性检验
@@ -29,6 +30,7 @@ records:
       held_out: 留出 1/4 断裂带不参与拟合，仅用于检验
     discriminating_power: high
     status: planned
+    cost: 4
 
   - id: T3
     name: 两岸地质连续性与岸线假设检验
@@ -42,6 +44,7 @@ records:
       held_out: 留出一侧的一段基底省不参与拟合
     discriminating_power: medium
     status: planned
+    cost: 6
 
   - id: T4
     name: 板内变形量评估
@@ -54,6 +57,7 @@ records:
       is_blind: false
     discriminating_power: medium
     status: planned
+    cost: 2
 
   - id: T5
     name: 时间尺度版本一致性审计
@@ -66,6 +70,7 @@ records:
       is_blind: false
     discriminating_power: none
     status: planned
+    cost: 1
     notes: 这是"通过也没用"的典型——任何板块重建都用同一时间尺度，该检验不判别假说。
 
   - id: T6
@@ -79,6 +84,7 @@ records:
       is_blind: false
     discriminating_power: low
     status: planned
+    cost: 2
 
   - id: T7
     name: 磁异常 one-off 错位检验
@@ -93,3 +99,4 @@ records:
       held_out: 留出一段等时线
     discriminating_power: high
     status: planned
+    cost: 3

@@ -7,7 +7,7 @@ description: Audit a GeoArg contract for independence and discriminating power. 
 
 An audit answers two questions the contract's verdict cannot answer by itself: **how many independent lines does this argument really rest on**, and **which tests could have gone the other way**. `geoarg` computes both. Your job is to interpret them and name the decisive test.
 
-The verdict without this audit is a number without a unit. Run `geoarg judge` for the verdict, `geoarg independence` for the effective evidence count, and `geoarg hit-set` for the tests that would retract the claim now.
+The verdict without this audit is a number without a unit. Run `geoarg judge` for the verdict, `geoarg independence` for the effective evidence count, and `geoarg hit-set` for the tests that would retract the claim now. If `geoarg` is not on PATH, use `python -m geoarg` in every command.
 
 ## Steps
 

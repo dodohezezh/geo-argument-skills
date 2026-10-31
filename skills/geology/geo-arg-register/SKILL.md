@@ -30,12 +30,12 @@ Write the contract to be recomputable, not persuasive. The verdict is computed b
    Done when: at least one entailment is recorded with a test that could fail, preferably on an evidence family independent of the premises.
 
 5. **Record the evidence.** For each record fill `source`, `coverage` (spatial extent, coverage fraction, detectability), `independence` (family, class, shared sources), `verification` level, and `status`.
-   Done when: every record has coverage numbers and an independence family, and unverified records say so instead of inheriting confidence.
+   Done when: every record has coverage numbers and an independence family, and unverified records say so instead of inheriting confidence. Only records referenced by an evidenced premise enter the independence report; a `derived` premise stays undetermined in v0.1, so its evidence is audited inside the other argument.
 
-6. **Declare the gaps.** List what the contract cannot express, with `kind` (cannot-express, ambiguous, missing-field, overspecified, other) and `severity` (blocking, annoying, minor). A gap is instrumentation, not failure.
+6. **Declare the gaps.** List what the contract cannot express, with `kind` (cannot-express, ambiguous, missing-field, overspecified, other), a `description` of the information that cannot be carried, and `severity` (blocking, annoying, minor). A gap is instrumentation, not failure.
    Done when: `gaps` exists, or the contract says "none found" with one line of why.
 
-7. **Run the gate.** Run `geoarg check <case>`, fix every problem, then run `geoarg judge <case>` and `geoarg report <case> --out report.md`. Commit the verdict with `geoarg commit <case>`.
+7. **Run the gate.** Run `geoarg check <case>`, fix every problem, then run `geoarg judge <case>` and `geoarg report <case> --out report.md`. Commit the verdict with `geoarg commit <case>`. If `geoarg` is not on PATH, use `python -m geoarg` for every command; a bare `.` works as the case path when you are inside the case directory.
    Done when: `check` exits 0, the verdict prints, and the report contains a decisive-test table.
 
 ## Rules
