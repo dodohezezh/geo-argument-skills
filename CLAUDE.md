@@ -8,15 +8,16 @@ For agents working in this repository.
 - `docs/geology/<skill-name>.md` is the human page for each skill. Every skill needs one.
 - `scripts/geoarg/` is the engine. `scripts/tests/` is its unittest suite.
 - `schema/` holds optional JSON Schema files. They document the contract; `validate` in `contract.py` is authoritative.
-- `examples/<case>/` holds a full GeoArg case and a short README.
+- `examples/<case>/` holds a full GeoArg case and a short README. `examples/paper-demo/` ships a synthetic PDF and its committed grounding ledger so `geoarg check` passes out of the box.
 
 ## Commands
 
 - Tests: `python -m unittest discover -s scripts/tests`
 - Lint the example: `geoarg check examples/south-atlantic`
+- Grounded example: `geoarg ground examples/paper-demo --pdf examples/paper-demo/paper.pdf`
 - Full smoke: `geoarg judge examples/south-atlantic && geoarg independence examples/south-atlantic`
 
-Run tests before committing. Keep the example case clean; tests assert on its numbers (3 records, `n_eff = 1.2`, 13 decisive events).
+Run tests before committing. Keep the example cases clean; tests assert on their numbers (3 records, `n_eff = 1.2`, 13 decisive events) and on the grounding statuses of the demo case (3 grounded quotes, acceptance rate 1.0).
 
 ## Skill conventions
 
@@ -34,6 +35,6 @@ Run tests before committing. Keep the example case clean; tests assert on its nu
 
 ## Versioning
 
-- `contract.py` `SCHEMA_VERSION` and `judge.py` `RULE_VERSION` move together.
-- A change to judge rules or schema requires a version bump and a test that covers the new behaviour.
+- `contract.py` `SCHEMA_VERSION` and `judge.py` `RULE_VERSION` move together. `ground.py` carries its own `GROUND_SCHEMA_VERSION`; a change to the grounding statuses or ledger shape bumps it.
+- A change to judge rules, the contract schema, or the grounding gate requires a version bump and a test that covers the new behaviour.
 - `verify` compares the engine digest; a code change without a version bump will surface as drift on every committed case. That is intentional.

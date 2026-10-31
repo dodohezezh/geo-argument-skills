@@ -1,77 +1,77 @@
-# GeoArg 证据台账：南大西洋案例（占位数据，填真实数据时替换 source/citation）
-schema_version: geoarg/0.1
+schema_version: geoarg/0.2
 records:
-  - id: ev.airmag.sa-1997.m-series
-    kind: observation
-    layer: L1
-    statement: 南大西洋两侧 M0–M4 磁异常条带的成对识别（含极性序列比对）
-    source:
-      citation: "(占位) 南大西洋航磁与船测磁力异常编图"
-      dataset: SA-1997-aeromag
-      version: "v1"
-      access: 待填
-    coverage:
-      spatial_extent: 10°S–40°S, 20°W–10°E
-      temporal_extent: 早白垩世 M 系列
-      resolution: 约 10 km 测线间距
-      coverage_fraction: 0.70
-      detectability: 0.90
-      sample_count: 3
-    independence:
-      family: G.marine-geophysics
-      shared_sources: [GPTS-2020]
-      independence_class: data
-    verification:
-      level: interpretation
-      verified_by: 待填
-      reproduced: false
-    status: accepted
-
-  - id: ev.fz.sa-2010.traces
-    kind: measurement
-    layer: L1
-    statement: 断裂带迹线几何（走向、分段、弯曲度）
-    source:
-      citation: "(占位) 南大西洋断裂带编图"
-      dataset: FZ-SA-2010
-      version: "v1"
-    coverage:
-      spatial_extent: 10°S–40°S
-      temporal_extent: 洋壳年龄范围
-      resolution: 约 15 km
-      coverage_fraction: 0.55
-      detectability: 0.80
-      sample_count: 12
-    independence:
-      family: G.marine-geophysics
-      shared_sources: [GPTS-2020]
-      independence_class: data
-    verification:
-      level: measurement
-      reproduced: false
-    status: accepted
-
-  - id: ev.geol.sa-2015.basement
-    kind: compilation
-    layer: L1
-    statement: 两岸基底省、褶皱带与古地磁极（陆地资料汇总）
-    source:
-      citation: "(占位) 两岸前裂谷地质对比与古地磁"
-      dataset: BASEMENT-SA-2015
-      version: "v1"
-    coverage:
-      spatial_extent: 两岸陆上露头带
-      temporal_extent: 前寒武—早白垩
-      resolution: 1:1M 编图
-      coverage_fraction: 0.40
-      detectability: 0.70
-      sample_count: 8
-    independence:
-      family: G.continental-geology
-      shared_sources: [GPTS-2020]
-      independence_class: physical
-    verification:
-      level: interpretation
-      verified_by: 待填
-      reproduced: false
-    status: accepted
+- id: ev.airmag.sa-1997.m-series
+  kind: observation
+  layer: L1
+  statement: 南大西洋两侧 M0–M4 磁异常条带的成对识别（含极性序列比对）
+  source:
+    citation: (占位) 南大西洋航磁与船测磁力异常编图
+    dataset: SA-1997-aeromag
+    version: v1
+    access: 待填
+  coverage:
+    spatial_extent: 10°S–40°S, 20°W–10°E
+    temporal_extent: 早白垩世 M 系列
+    resolution: 约 10 km 测线间距
+    coverage_fraction: 0.7
+    detectability: 0.9
+    sample_count: 3
+  independence:
+    family: G.marine-geophysics
+    shared_sources:
+    - GPTS-2020
+    independence_class: data
+  verification:
+    level: interpretation
+    verified_by: 待填
+    reproduced: false
+  status: accepted
+- id: ev.fz.sa-2010.traces
+  kind: measurement
+  layer: L1
+  statement: 断裂带迹线几何（走向、分段、弯曲度）
+  source:
+    citation: (占位) 南大西洋断裂带编图
+    dataset: FZ-SA-2010
+    version: v1
+  coverage:
+    spatial_extent: 10°S–40°S
+    temporal_extent: 洋壳年龄范围
+    resolution: 约 15 km
+    coverage_fraction: 0.55
+    detectability: 0.8
+    sample_count: 12
+  independence:
+    family: G.marine-geophysics
+    shared_sources:
+    - GPTS-2020
+    independence_class: data
+  verification:
+    level: measurement
+    reproduced: false
+  status: accepted
+- id: ev.geol.sa-2015.basement
+  kind: compilation
+  layer: L1
+  statement: 两岸基底省、褶皱带与古地磁极（陆地资料汇总）
+  source:
+    citation: (占位) 两岸前裂谷地质对比与古地磁
+    dataset: BASEMENT-SA-2015
+    version: v1
+  coverage:
+    spatial_extent: 两岸陆上露头带
+    temporal_extent: 前寒武—早白垩
+    resolution: 1:1M 编图
+    coverage_fraction: 0.4
+    detectability: 0.7
+    sample_count: 8
+  independence:
+    family: G.continental-geology
+    shared_sources:
+    - GPTS-2020
+    independence_class: physical
+  verification:
+    level: interpretation
+    verified_by: 待填
+    reproduced: false
+  status: accepted

@@ -20,3 +20,10 @@
 | verdict | 判决 | `SUPPORTED`, `UNDETERMINED`, `UNTESTED`, `SUSPENDED`, `DEFEATED`. |
 | gap | 缺口 | Something the contract cannot express, rated `blocking`, `annoying`, or `minor`. |
 | registry | 台账 | The hash-chained record written by `geoarg commit`. |
+| source locator | 原文锚点 | Page plus the sentence as it appears in the source PDF, carried by transcription-level evidence. |
+| grounding gate | 接地门 | `geoarg ground`: a deterministic string check of every declared quote against the source PDF. |
+| grounded | 已接地 | The quote occurs on the declared page. Only grounded quotes may stay `accepted` at transcription level. |
+| page mismatch | 页码不符 | The quote exists in the PDF but on a different page. A citation error, not a fabrication. |
+| not found | 未找到 | The quote occurs nowhere in the PDF. A fabricated draft; the record must become `disputed`. |
+| not groundable | 无法接地 | The PDF has no usable text layer, so no quote can be checked. |
+| acceptance rate | 验收率 | `grounded / drafted`: the share of declared quotes that the gate found. |

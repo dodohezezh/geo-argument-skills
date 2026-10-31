@@ -12,7 +12,7 @@ from typing import Any
 
 from .contract import Case
 
-RULE_VERSION = "geoarg/0.1"
+RULE_VERSION = "geoarg/0.2"
 
 VERDICTS = ("DEFEATED", "SUSPENDED", "UNTESTED", "UNDETERMINED", "SUPPORTED")
 

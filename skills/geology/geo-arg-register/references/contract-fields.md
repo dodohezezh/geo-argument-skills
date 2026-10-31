@@ -1,12 +1,12 @@
 # Contract field reference
 
-Three files per case directory: `argument.yaml`, `evidence.yaml`, `test.yaml`. `schema_version` is `geoarg/0.1` in all three. `schema/*.json` documents the same contract; `validate` in `contract.py` is authoritative when the two disagree.
+Three files per case directory: `argument.yaml`, `evidence.yaml`, `test.yaml`. `schema_version` is `geoarg/0.2` in all three. `schema/*.json` documents the same contract; `validate` in `contract.py` is authoritative when the two disagree.
 
 ## argument.yaml
 
 | Field | Required | Meaning |
 | --- | --- | --- |
-| `schema_version` | yes | `geoarg/0.1` |
+| `schema_version` | yes | `geoarg/0.2` |
 | `id` | yes | stable case id, for example `arg.south-atlantic.m0` |
 | `title` | yes | human name of the claim |
 | `domain` | yes | `plate-tectonics`, `stratigraphy`, `petrology`, `geomorphology`, `geophysics`, `other` |
@@ -86,9 +86,25 @@ Three files per case directory: `argument.yaml`, `evidence.yaml`, `test.yaml`. `
 | `independence.independence_class` | yes | `physical`, `method`, `data`, `shared-calibration` |
 | `independence.shared_sources` | no | calibration products shared with other records |
 | `verification.level` | yes | `transcription`, `measurement`, or `interpretation` |
+| `source_locator.page` | for transcription | 1-based page in the source PDF |
+| `source_locator.quote` | for transcription | the sentence as it appears in the source |
 | `status` | yes | `accepted`, `disputed`, `retracted`, `superseded` |
 
 Coverage answers "could this evidence have found the feature if it were there?". A record without coverage numbers cannot support an absence claim. Only records referenced by an evidenced premise count toward `n_eff`; calibration names declared in `dependencies` but attached to no counted record are reported as unattached.
+
+## Transcription gate
+
+A transcription-level record must carry a `source_locator`. `geoarg ground <case> --pdf <paper>` checks every declared quote against the PDF text layer and writes `.geoarg/ground/<claim>.json`. Only a `grounded` quote may stay `accepted`; an accepted transcription-level quote without a grounded ledger entry fails `geoarg check`.
+
+| Ledger status | Meaning | What to do |
+| --- | --- | --- |
+| `grounded` | quote found on the declared page | keep |
+| `page-mismatch` | quote found on another page | fix the citation, do not delete the quote |
+| `not-found` | quote found nowhere in the PDF | the draft was fabricated; mark the record `disputed` |
+| `not-groundable` | the PDF has no usable text layer | OCR first, or keep the record at interpretation level |
+| `no-locator` | no `source_locator` declared | add one or lower the verification level |
+
+The ledger also records `acceptance_rate = grounded / drafted`. The gate proves that a string occurs in the source, not that the interpretation built on it is right.
 
 ## test.yaml
 

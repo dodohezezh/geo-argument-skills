@@ -1,132 +1,131 @@
-# GeoArg 案例：南大西洋 M0 附近的刚性板块重建
-# 用途：v0.1 的基线案例——科学上近乎可机检，因此失败只可能来自契约，不会来自地质争论。
-schema_version: geoarg/0.1
+schema_version: geoarg/0.2
 id: arg.south-atlantic.m0
 title: 南大西洋 M0 附近的刚性板块重建
 domain: plate-tectonics
-
 claim:
   id: C1
   statement: 非洲板块与南美板块在 M0 等时线时刻可由一个欧拉旋转（极点 P0、角 θ0）从现今位置复原。
   kind: reconstruction
   layer: L4
   scope: 南大西洋 10°S–40°S 洋壳区，早白垩世 M0 时刻
-
 premises:
-  - id: P1
-    statement: M0–M4 磁异常条带两侧成对识别，极性序列与 GPTS 一致
-    kind: evidenced
-    layer: L1
-    evidence_refs: [ev.airmag.sa-1997.m-series]
-    test_refs: [T1]
-    independence_group: G.marine-geophysics
-    status: untested
-
-  - id: P2
-    statement: 断裂带走向可拟合成绕同一极点 P0 的小圆
-    kind: evidenced
-    layer: L1
-    evidence_refs: [ev.fz.sa-2010.traces]
-    test_refs: [T2]
-    independence_group: G.marine-geophysics
-    status: untested
-
-  - id: P3
-    statement: 两岸基底省与褶皱带在闭合位置连续
-    kind: evidenced
-    layer: L1
-    evidence_refs: [ev.geol.sa-2015.basement]
-    test_refs: [T3]
-    independence_group: G.continental-geology
-    status: untested
-
+- id: P1
+  statement: M0–M4 磁异常条带两侧成对识别，极性序列与 GPTS 一致
+  kind: evidenced
+  layer: L1
+  evidence_refs:
+  - ev.airmag.sa-1997.m-series
+  test_refs:
+  - T1
+  independence_group: G.marine-geophysics
+  status: untested
+- id: P2
+  statement: 断裂带走向可拟合成绕同一极点 P0 的小圆
+  kind: evidenced
+  layer: L1
+  evidence_refs:
+  - ev.fz.sa-2010.traces
+  test_refs:
+  - T2
+  independence_group: G.marine-geophysics
+  status: untested
+- id: P3
+  statement: 两岸基底省与褶皱带在闭合位置连续
+  kind: evidenced
+  layer: L1
+  evidence_refs:
+  - ev.geol.sa-2015.basement
+  test_refs:
+  - T3
+  independence_group: G.continental-geology
+  status: untested
 inference:
   rule_id: W.rigid-plate-euler
   warrant: 刚性板块之间的相对运动在给定时刻可由一个欧拉旋转描述。
   cp:
-    - id: CP1
-      statement: 两块体在 M0 以来无显著板内变形
-      cp_type: structural
-      test_ref: T4
-      state: unknown
-    - id: CP2
-      statement: 三条证据族共享同一 GPTS 时间尺度版本
-      cp_type: calibration
-      test_ref: T5
-      state: unknown
-    - id: CP3
-      statement: 岸线与陆架坡折不等于板块边界
-      cp_type: methodological
-      test_ref: T3
-      state: unknown
+  - id: CP1
+    statement: 两块体在 M0 以来无显著板内变形
+    cp_type: structural
+    test_ref: T4
+    state: unknown
+  - id: CP2
+    statement: 三条证据族共享同一 GPTS 时间尺度版本
+    cp_type: calibration
+    test_ref: T5
+    state: unknown
+  - id: CP3
+    statement: 岸线与陆架坡折不等于板块边界
+    cp_type: methodological
+    test_ref: T3
+    state: unknown
   defeaters:
-    - id: D1
-      type: undercutting
-      statement: 洋内存在微板块或多板块拓扑（洋壳并非在两板块之间生长）
-      severity: fatal
-      test_ref: T6
-      state: unknown
-    - id: D2
-      type: undercutting
-      statement: M0 之后存在显著板内变形（缩短/走滑）
-      severity: degrading
-      test_ref: T4
-      state: unknown
-    - id: D3
-      type: rebutting
-      statement: 某一条磁异常被错认一个（one-off 错位）
-      severity: fatal
-      test_ref: T7
-      state: unknown
-    - id: D4
-      type: undercutting
-      statement: 断裂带在洋壳形成后被改造，迹线不再是小圆
-      severity: degrading
-      test_ref: T2
-      state: unknown
-    - id: D5
-      type: undercutting
-      statement: 两岸地质连续只是二维切片上的巧合（沿走向无延续）
-      severity: degrading
-      test_ref: T3
-      state: unknown
-
-entailments:
-  - id: E1
-    statement: 若重建正确，断裂带拟合出的极点应与等时线拟合的欧拉极在误差内一致
-    kind: geometric-consistency
+  - id: D1
+    type: undercutting
+    statement: 洋内存在微板块或多板块拓扑（洋壳并非在两板块之间生长）
+    severity: fatal
+    test_ref: T6
+    state: unknown
+  - id: D2
+    type: undercutting
+    statement: M0 之后存在显著板内变形（缩短/走滑）
+    severity: degrading
+    test_ref: T4
+    state: unknown
+  - id: D3
+    type: rebutting
+    statement: 某一条磁异常被错认一个（one-off 错位）
+    severity: fatal
+    test_ref: T7
+    state: unknown
+  - id: D4
+    type: undercutting
+    statement: 断裂带在洋壳形成后被改造，迹线不再是小圆
+    severity: degrading
     test_ref: T2
-    risk: high
-    status: untested
-  - id: E2
-    statement: 若重建正确，闭合位置的重叠/空隙量应低于 50 km
-    kind: quantitative
-    test_ref: T1
-    risk: medium
-    status: untested
-
+    state: unknown
+  - id: D5
+    type: undercutting
+    statement: 两岸地质连续只是二维切片上的巧合（沿走向无延续）
+    severity: degrading
+    test_ref: T3
+    state: unknown
+entailments:
+- id: E1
+  statement: 若重建正确，断裂带拟合出的极点应与等时线拟合的欧拉极在误差内一致
+  kind: geometric-consistency
+  test_ref: T2
+  risk: high
+  status: untested
+- id: E2
+  statement: 若重建正确，闭合位置的重叠/空隙量应低于 50 km
+  kind: quantitative
+  test_ref: T1
+  risk: medium
+  status: untested
 dependencies:
-  evidence_families: [G.marine-geophysics, G.continental-geology]
-  shared_calibration: [GPTS-2020, plate-model-2024]
-
-# 这一节是"体检报告"：填不进去的东西必须写在这里，不许绕过。
+  evidence_families:
+  - G.marine-geophysics
+  - G.continental-geology
+  shared_calibration:
+  - GPTS-2020
+  - plate-model-2024
 gaps:
-  - kind: missing-field
-    description: 无法表达"时间尺度版本是共享校准"这一事实的传播范围——所有前提都依赖同一个 GPTS 版本，schema 只能逐条标注，无法表达"换一个 GPTS 版本后哪些结论同时动摇"。
-    where: dependencies.shared_calibration
-    severity: blocking
-  - kind: cannot-express
-    description: 无法表达"重建是连续时间序列，M0 只是抽样点"——论证是点态的，地质对象是过程。
-    where: claim.scope
-    severity: annoying
-  - kind: ambiguous
-    description: "cp CP2 与前提 P1 的独立性标注重叠：GPTS 既是前提的一部分，又是校准源，二者边界不清。"
-    where: inference.cp[1]
-    severity: minor
-
+- kind: missing-field
+  description: 无法表达"时间尺度版本是共享校准"这一事实的传播范围——所有前提都依赖同一个 GPTS 版本，schema 只能逐条标注，无法表达"换一个
+    GPTS 版本后哪些结论同时动摇"。
+  where: dependencies.shared_calibration
+  severity: blocking
+- kind: cannot-express
+  description: 无法表达"重建是连续时间序列，M0 只是抽样点"——论证是点态的，地质对象是过程。
+  where: claim.scope
+  severity: annoying
+- kind: ambiguous
+  description: cp CP2 与前提 P1 的独立性标注重叠：GPTS 既是前提的一部分，又是校准源，二者边界不清。
+  where: inference.cp[1]
+  severity: minor
 audit:
   author: 待填
-  created: "2026-10-30T00:00:00Z"
-  updated: "2026-10-30T00:00:00Z"
-  version: "0.1"
+  created: '2026-10-30T00:00:00Z'
+  updated: '2026-10-30T00:00:00Z'
+  version: '0.1'
   source_case: 教学示例；文献与数据集引用为占位

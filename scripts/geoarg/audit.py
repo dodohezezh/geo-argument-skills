@@ -15,9 +15,10 @@ from pathlib import Path
 from typing import Any
 
 from .contract import CASE_FILES, ContractError, load_case
+from .ground import GroundError, ledger_sha256, load_ledger, validate_grounding
 from .judge import RULE_VERSION, judge
 
-_ENGINE_FILES = ("contract.py", "judge.py", "independence.py", "hitting.py")
+_ENGINE_FILES = ("contract.py", "judge.py", "independence.py", "hitting.py", "ground.py")
 
 
 def _sha256_bytes(data: bytes) -> str:
@@ -47,18 +48,34 @@ def registry_dir(case_root: Path, override: str | Path | None = None) -> Path:
 
 
 def commit(case_root: str | Path, registry: str | Path | None = None) -> tuple[dict[str, Any], Path]:
-    """Validate, judge, and write a canonical registry record."""
+    """Validate, ground, judge, and write a canonical registry record."""
     root = Path(case_root)
     case = load_case(root)
+    try:
+        ledger = load_ledger(root)
+    except GroundError as exc:
+        raise ContractError(str(exc)) from exc
+    grounding_problems, _ = validate_grounding(case, ledger)
+    if grounding_problems:
+        raise ContractError("grounding gate: " + "; ".join(grounding_problems))
     result = judge(case)
+    grounding = None
+    if ledger is not None:
+        grounding = {
+            "sha256": ledger_sha256(root),
+            "acceptance_rate": ledger.get("acceptance_rate"),
+            "grounded": ledger.get("grounded"),
+            "drafted": ledger.get("drafted"),
+        }
     record = {
-        "schema_version": "geoarg/registry/0.1",
+        "schema_version": "geoarg/registry/0.2",
         "rule_version": RULE_VERSION,
         "claim_id": case.claim.get("id"),
         "title": case.argument.get("title"),
         "verdict": result["verdict"],
         "reasons": result["reasons"],
         "flags": result["flags"],
+        "grounding": grounding,
         "input_sha256": case_digest(root),
         "engine_sha256": engine_digest(),
         "committed_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -91,6 +108,11 @@ def verify(case_root: str | Path, registry: str | Path | None = None) -> tuple[b
     current_engine = engine_digest()
     if record.get("engine_sha256") != current_engine:
         problems.append("engine changed since commit (recompute the verdict before trusting it)")
+
+    current_grounding = ledger_sha256(root)
+    stored_grounding = (record.get("grounding") or {}).get("sha256")
+    if current_grounding != stored_grounding:
+        problems.append("grounding ledger changed since commit (re-ground before trusting the verdict)")
 
     try:
         case = load_case(root)

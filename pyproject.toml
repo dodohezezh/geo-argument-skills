@@ -4,12 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "geoarg"
-version = "0.1.0"
+version = "0.2.0"
 description = "Deterministic contract engine for geological arguments."
 readme = "README.en.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
-dependencies = ["PyYAML>=6.0"]
+dependencies = ["PyYAML>=6.0", "pypdf>=6.0"]
 
 [project.scripts]
 geoarg = "geoarg.cli:main"

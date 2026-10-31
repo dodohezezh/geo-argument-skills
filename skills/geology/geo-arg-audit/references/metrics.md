@@ -39,8 +39,15 @@ An expensive test that barely discriminates loses to a cheap test that separates
 
 When several conditions must hold together, the set of outcomes that defeats the claim is a minimal hitting set over the contract's defeat paths. Version 0.1 enumerates single-event paths only. For combinations of degrading defeaters, state the combination explicitly in the report rather than assuming the engine found it.
 
+## Grounding acceptance rate
+
+    acceptance_rate = grounded / drafted
+
+`drafted` counts evidence records that declare a `source_locator`; `grounded` counts the quotes found on the declared page. `page-mismatch` is a citation error (the quote exists on another page); `not-found` is a fabricated draft. Report the rate next to `n_eff`: an argument can rest on one independent line and on zero grounded quotes at the same time. The gate has the shape of speculative decoding (draft, verify, accept), but the verifier is a string match against the source, not a judge of meaning.
+
 ## Reporting units
 
 - Independence: `n_eff / n`, mean rho, families, shared calibration.
+- Grounding: acceptance rate, plus the count and status of every non-grounded quote.
 - Power: the contract's `none/low/medium/high` label plus one sentence of counter-prediction.
-- Confidence: one paragraph with the verdict, the two numbers, and the decisive test.
+- Confidence: one paragraph with the verdict, the numbers, and the decisive test.

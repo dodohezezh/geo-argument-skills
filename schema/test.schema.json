@@ -7,7 +7,7 @@
   "required": ["schema_version", "id", "name", "checks", "method", "status"],
   "additionalProperties": false,
   "properties": {
-    "schema_version": { "const": "geoarg/0.1" },
+    "schema_version": { "const": "geoarg/0.2" },
     "id": { "type": "string", "pattern": "^T[0-9]+$" },
     "name": { "type": "string", "minLength": 3 },
     "checks": {

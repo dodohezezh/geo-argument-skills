@@ -29,19 +29,21 @@ Write the contract to be recomputable, not persuasive. The verdict is computed b
 4. **Write the entailments.** State what must also be true if the claim holds, and how surprising each consequence is (`risk`: low, medium, high). The high-risk entailment is usually the argument's real test.
    Done when: at least one entailment is recorded with a test that could fail, preferably on an evidence family independent of the premises.
 
-5. **Record the evidence.** For each record fill `source`, `coverage` (spatial extent, coverage fraction, detectability), `independence` (family, class, shared sources), `verification` level, and `status`.
-   Done when: every record has coverage numbers and an independence family, and unverified records say so instead of inheriting confidence. Only records referenced by an evidenced premise enter the independence report; a `derived` premise stays undetermined in v0.1, so its evidence is audited inside the other argument.
+5. **Record the evidence.** For each record fill `source`, `coverage` (spatial extent, coverage fraction, detectability), `independence` (family, class, shared sources), `verification.level`, and `status`. A `transcription` record also needs `source_locator` (page plus the sentence as it appears in the source).
+   Done when: every record has coverage numbers and an independence family, every transcription record has a locator, and unverified records say so instead of inheriting confidence. Only records referenced by an evidenced premise enter the independence report; a `derived` premise stays undetermined, so its evidence is audited inside the other argument.
 
 6. **Declare the gaps.** List what the contract cannot express, with `kind` (cannot-express, ambiguous, missing-field, overspecified, other), a `description` of the information that cannot be carried, and `severity` (blocking, annoying, minor). A gap is instrumentation, not failure.
    Done when: `gaps` exists, or the contract says "none found" with one line of why.
 
-7. **Run the gate.** Run `geoarg check <case>`, fix every problem, then run `geoarg judge <case>` and `geoarg report <case> --out report.md`. Commit the verdict with `geoarg commit <case>`. If `geoarg` is not on PATH, use `python -m geoarg` for every command; a bare `.` works as the case path when you are inside the case directory.
-   Done when: `check` exits 0, the verdict prints, and the report contains a decisive-test table.
+7. **Run the gate.** If any record is transcription level, run `geoarg ground <case> --pdf <paper>` and fix every `not-found` or `page-mismatch` quote before continuing. Then run `geoarg check <case>` and fix every problem, run `geoarg judge <case>` and `geoarg report <case> --out report.md`, and commit the verdict with `geoarg commit <case>`. If `geoarg` is not on PATH, use `python -m geoarg` for every command; a bare `.` works as the case path when you are inside the case directory.
+   Done when: `check` exits 0, every accepted transcription quote is `grounded`, the verdict prints, and the report contains a grounding table and a decisive-test table.
 
 ## Rules
 
 - Every condition and every defeat condition carries a test. A condition without a test is rhetoric.
 - `unknown` is a legal state. The contract reports unknowns; it does not fill them with confidence.
+- A transcribed quote carries a `source_locator`, and `geoarg ground` decides whether it stays accepted. If the quote is not in the PDF, the record becomes `disputed`; do not rephrase the quote until it matches.
+- Grounding is not verification of meaning. A grounded quote can still be cited for the wrong claim; that is the audit's problem, not the gate's.
 - Cite the record you read. Evidence refs resolve to entries in `evidence.yaml` with a source, not to memory.
 - One claim per contract. Two claims in one file hide the shared premises that the audit needs to see.
 - When a premise rests on another argument, link it as `derived`. Do not copy the conclusion.

@@ -10,6 +10,7 @@ from pathlib import Path
 from . import __version__
 from .audit import commit, verify
 from .contract import ContractError, load_case, validate
+from .ground import GroundError, ground_records, load_ledger, validate_grounding, write_ledger
 from .hitting import decisive_events
 from .independence import report as independence_report
 from .judge import judge
@@ -45,6 +46,12 @@ def _build_parser() -> argparse.ArgumentParser:
             sub_parser.add_argument("--registry", default=None, help="registry directory (default: <case>/.geoarg/registry)")
         if name == "report":
             sub_parser.add_argument("--out", default=None, help="write markdown to this path instead of stdout")
+
+    ground_parser = sub.add_parser("ground", help="verify transcribed quotes against a source PDF")
+    ground_parser.add_argument("case", help="case directory containing argument.yaml, evidence.yaml, test.yaml")
+    ground_parser.add_argument("--pdf", required=True, help="path to the source PDF")
+    ground_parser.add_argument("--strict", action="store_true", help="exit non-zero if any declared quote is not grounded")
+    ground_parser.add_argument("--json", action="store_true", help="emit JSON instead of text")
     return parser
 
 
@@ -58,11 +65,19 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.cmd == "check":
         problems = validate(case)
+        warnings: list[str] = []
+        try:
+            grounding_problems, warnings = validate_grounding(case, load_ledger(case.root))
+        except GroundError as exc:
+            grounding_problems = [f"grounding ledger unreadable: {exc}"]
+        problems.extend(grounding_problems)
         if args.json:
-            _emit_json({"ok": not problems, "problems": problems})
+            _emit_json({"ok": not problems, "problems": problems, "warnings": warnings})
         else:
             for problem in problems:
                 print(f"PROBLEM: {problem}")
+            for warning in warnings:
+                print(f"WARNING: {warning}")
             print(f"{'FAIL' if problems else 'OK'}  {case.claim.get('id')}  ({len(problems)} problem(s))")
         return 1 if problems else 0
 
@@ -105,6 +120,43 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  note: {payload['note']}")
         return 0
 
+    if args.cmd == "ground":
+        problems = validate(case)
+        if problems:
+            for problem in problems:
+                print(f"PROBLEM: {problem}")
+            print("refusing to ground an invalid contract", file=sys.stderr)
+            return 2
+        try:
+            ledger = ground_records(case, args.pdf)
+        except GroundError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+        path = write_ledger(case, ledger)
+        if args.json:
+            _emit_json({"ledger": ledger, "path": str(path)})
+        else:
+            extracted = ledger["extracted"]
+            text_layer = "yes" if extracted["text_layer"] else "no"
+            print(
+                f"pdf: {ledger['pdf']['path']} ({extracted['extractor']}, {extracted['pages']} pages, "
+                f"{extracted['chars']} chars, text layer: {text_layer})"
+            )
+            rate = ledger["acceptance_rate"]
+            rate_text = "n/a" if rate is None else f"{rate:.3f}"
+            print(f"acceptance rate: {rate_text} ({ledger['grounded']}/{ledger['drafted']} drafted quotes grounded)")
+            for rid, entry in ledger["records"].items():
+                if entry["status"] == "no-locator":
+                    print(f"  {entry['status']:<14} {rid}")
+                    continue
+                found = entry.get("found_page")
+                declared = entry.get("page")
+                suffix = f" (declared page {declared})" if entry["status"] == "page-mismatch" else ""
+                print(f"  {entry['status']:<14} {rid}  page {found or declared}{suffix}")
+            print(f"ledger: {path}")
+        failed = ledger["drafted"] - ledger["grounded"]
+        return 1 if args.strict and failed else 0
+
     if args.cmd == "commit":
         problems = validate(case)
         if problems:
@@ -112,11 +164,18 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"PROBLEM: {problem}")
             print("refusing to commit an invalid contract", file=sys.stderr)
             return 2
-        record, path = commit(case.root, args.registry)
+        try:
+            record, path = commit(case.root, args.registry)
+        except ContractError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
         if args.json:
             _emit_json({"record": record, "path": str(path)})
         else:
             print(f"committed {record['verdict']} for {record['claim_id']} -> {path}")
+            grounding = record.get("grounding")
+            if grounding:
+                print(f"grounding: acceptance rate {grounding['acceptance_rate']} ({grounding['grounded']}/{grounding['drafted']})")
         return 0
 
     if args.cmd == "verify":

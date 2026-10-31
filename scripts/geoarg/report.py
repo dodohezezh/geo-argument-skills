@@ -6,6 +6,7 @@ from typing import Any
 
 from .audit import case_digest
 from .contract import Case
+from .ground import GroundError, load_ledger, validate_grounding
 from .hitting import decisive_events
 from .independence import report as independence_report
 from .judge import judge
@@ -69,6 +70,38 @@ def render(case: Case) -> str:
         out.append(f"- warning: {warning}")
     if indep["declared_calibration_not_attached"]:
         out.append(f"- declared but unattached calibration: {indep['declared_calibration_not_attached']}")
+    out.append("")
+
+    out.append("## Grounding")
+    try:
+        ledger = load_ledger(case.root)
+        grounding_problems, grounding_warnings = validate_grounding(case, ledger)
+    except GroundError as exc:
+        ledger = None
+        grounding_problems = [f"grounding ledger unreadable: {exc}"]
+        grounding_warnings = []
+    if ledger is None:
+        out.append("- no grounding ledger (transcription-level evidence is unverified)")
+    else:
+        pdf = ledger["pdf"]
+        extracted = ledger["extracted"]
+        text_layer = "yes" if extracted["text_layer"] else "no"
+        out.append(f"- source: `{pdf['path']}` ({extracted['pages']} pages, {extracted['chars']} chars, text layer: {text_layer})")
+        rate = ledger["acceptance_rate"]
+        out.append(
+            f"- acceptance rate: **{rate if rate is not None else 'n/a'}** "
+            f"({ledger['grounded']}/{ledger['drafted']} drafted quotes grounded)"
+        )
+        rows = [
+            [rid, entry["status"], entry.get("page", ""), entry.get("found_page", "")]
+            for rid, entry in ledger["records"].items()
+        ]
+        if rows:
+            out.append(_table(rows, ["evidence", "status", "declared page", "found page"]))
+    for problem in grounding_problems:
+        out.append(f"- problem: {problem}")
+    for warning in grounding_warnings:
+        out.append(f"- warning: {warning}")
     out.append("")
 
     out.append("## Decisive tests")

@@ -2,12 +2,12 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://geoarg.local/schema/evidence.schema.json",
   "title": "GeoArg Evidence（证据台账一条）",
-  "description": "一条证据记录。契约决定：①没有 coverage 字段就不得用'没观测到'来支持任何结论；②独立性必须显式标注（族、派生来源、共享校准）；③verification.level 区分转录/测量/解释——只有转录级可以直接提升为观测量，解释级必须走论证。",
+  "description": "一条证据记录。契约决定：①没有 coverage 字段就不得用'没观测到'来支持任何结论；②独立性必须显式标注（族、派生来源、共享校准）；③verification.level 区分转录/测量/解释——只有转录级可以直接提升为观测量，解释级必须走论证；④转录级引文必须带 source_locator，并由 geoarg ground 与源 PDF 比对，grounded 之后才允许 accepted。",
   "type": "object",
   "required": ["schema_version", "id", "kind", "layer", "statement", "source", "coverage", "independence", "verification", "status"],
   "additionalProperties": false,
   "properties": {
-    "schema_version": { "const": "geoarg/0.1" },
+    "schema_version": { "const": "geoarg/0.2" },
     "id": { "type": "string", "pattern": "^ev\\.[a-z0-9][a-z0-9._-]*$" },
     "kind": {
       "type": "string",
@@ -25,6 +25,16 @@
         "dataset": { "type": "string" },
         "version": { "type": "string" },
         "access": { "type": "string" }
+      }
+    },
+    "source_locator": {
+      "type": "object",
+      "description": "转录级的原文锚点。geoarg ground 用它把引文与源 PDF 比对；只有 grounded 的转录级证据才能保持 accepted。",
+      "required": ["page", "quote"],
+      "additionalProperties": false,
+      "properties": {
+        "page": { "type": "integer", "minimum": 1 },
+        "quote": { "type": "string", "minLength": 3 }
       }
     },
     "coverage": {

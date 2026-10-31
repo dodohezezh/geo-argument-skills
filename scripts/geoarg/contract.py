@@ -8,7 +8,7 @@ from typing import Any
 
 import yaml
 
-SCHEMA_VERSION = "geoarg/0.1"
+SCHEMA_VERSION = "geoarg/0.2"
 CASE_FILES = ("argument.yaml", "evidence.yaml", "test.yaml")
 
 _LAYERS = {"L0", "L1", "L2", "L3", "L4"}
@@ -20,6 +20,7 @@ _ENTAILMENT_KINDS = {"geometric-consistency", "quantitative", "blind-prediction"
 _RISKS = {"low", "medium", "high"}
 _POWERS = {"none", "low", "medium", "high"}
 _TEST_STATUS = {"planned", "running", "passed", "failed", "not-run"}
+_VERIFICATION_LEVELS = {"transcription", "measurement", "interpretation"}
 _GAP_KINDS = {"cannot-express", "ambiguous", "missing-field", "overspecified", "other"}
 _GAP_SEVERITIES = {"blocking", "annoying", "minor"}
 
@@ -165,7 +166,12 @@ def validate(case: Case) -> list[str]:
 
     for rec in case.evidence.get("records", []):
         where = f"evidence {rec.get('id')}"
-        _need(problems, where, rec, ("id", "kind", "layer", "statement", "source", "coverage", "independence", "status"))
+        _need(
+            problems,
+            where,
+            rec,
+            ("id", "kind", "layer", "statement", "source", "coverage", "independence", "verification", "status"),
+        )
         coverage = rec.get("coverage", {})
         for key in ("spatial_extent", "coverage_fraction", "detectability"):
             if coverage.get(key) in (None, ""):
@@ -176,6 +182,25 @@ def validate(case: Case) -> list[str]:
                 problems.append(f"{where}: coverage.{key} must be between 0 and 1")
         if rec.get("independence", {}).get("family") in (None, ""):
             problems.append(f"{where}: independence.family is required")
+        level = (rec.get("verification") or {}).get("level")
+        if level not in _VERIFICATION_LEVELS:
+            problems.append(f"{where}: verification.level must be transcription, measurement, or interpretation")
+        locator = rec.get("source_locator")
+        if locator is not None:
+            if not isinstance(locator, dict):
+                problems.append(f"{where}: source_locator must be a mapping")
+            else:
+                page = locator.get("page")
+                quote = locator.get("quote")
+                if not isinstance(page, int) or page < 1:
+                    problems.append(f"{where}: source_locator.page must be a positive integer")
+                if not isinstance(quote, str) or not quote.strip():
+                    problems.append(f"{where}: source_locator.quote must be a non-empty string")
+        if level == "transcription" and rec.get("status") == "accepted":
+            if not isinstance(locator, dict) or not locator.get("quote"):
+                problems.append(
+                    f"{where}: accepted transcription-level evidence needs source_locator with page and quote"
+                )
 
     for test in case.tests.get("records", []):
         where = f"test {test.get('id')}"

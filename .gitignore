@@ -5,4 +5,6 @@ build/
 dist/
 .venv/
 .geoarg/
+!examples/paper-demo/.geoarg/
+!examples/paper-demo/.geoarg/**
 report.md
