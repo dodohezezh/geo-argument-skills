@@ -46,6 +46,7 @@ def _build_parser() -> argparse.ArgumentParser:
             sub_parser.add_argument("--registry", default=None, help="registry directory (default: <case>/.geoarg/registry)")
         if name == "report":
             sub_parser.add_argument("--format", choices=("docx", "md"), default="docx", help="output format (default: docx)")
+            sub_parser.add_argument("--lang", choices=("en", "zh"), default="en", help="report language (default: en)")
             sub_parser.add_argument(
                 "--out",
                 default=None,
@@ -196,10 +197,10 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "report":
         if args.format == "docx":
             target = Path(args.out) if args.out else Path(case.root) / "report.docx"
-            render_docx(case, target)
+            render_docx(case, target, args.lang)
             print(f"wrote {target}")
         else:
-            markdown = render(case)
+            markdown = render(case, args.lang)
             if args.out:
                 Path(args.out).write_text(markdown, encoding="utf-8")
                 print(f"wrote {args.out}")

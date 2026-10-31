@@ -67,6 +67,15 @@ class ReportModelTest(unittest.TestCase):
             self.assertEqual(code, 0)
             self.assertIn("# GeoArg report:", out.getvalue())
 
+    def test_chinese_report_translates_the_frame_only(self) -> None:
+        text = render(load_case(CASE), lang="zh")
+        self.assertIn("# GeoArg 报告", text)
+        self.assertIn("## 判决理由", text)
+        self.assertIn("## 前提", text)
+        self.assertIn("## 决定性检验", text)
+        self.assertIn("n_eff = 1.2", text)
+        self.assertIn("| P1 ", text)
+
 
 if __name__ == "__main__":
     unittest.main()

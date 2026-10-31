@@ -26,7 +26,7 @@ The verdict without this audit is a number without a unit. Run `geoarg judge` fo
 5. **Find the decisive test now.** From the hit-set, choose the outcome with the highest power and the lowest cost that would change the verdict. If no single test changes it, say the claim is currently undecidable and name what would make it decidable.
    Done when: the report names one test (or states that none exists) and what its outcome would do to the verdict.
 
-6. **Write the confidence statement.** One paragraph: verdict, `n_eff / n`, the acceptance rate when transcription evidence is involved, the power profile of the gating tests, the decisive test, and any blocking gap. Keep the numbers in the sentence. Then write the deliverable with `geoarg report <case>`; it writes `<case>/report.docx` in Word by default. Use `--format md` only when the user asks for Markdown.
+6. **Write the confidence statement.** One paragraph: verdict, `n_eff / n`, the acceptance rate when transcription evidence is involved, the power profile of the gating tests, the decisive test, and any blocking gap. Keep the numbers in the sentence. Then write the deliverable with `geoarg report <case>`; it writes `<case>/report.docx` in Word by default. Pass `--lang zh` when the user wants the report frame in Chinese; contract content is rendered as written. Use `--format md` only when the user asks for Markdown.
    Done when: the statement stands alone without the rest of the report, it uses counts rather than adjectives, and `<case>/report.docx` exists.
 
 ## Rules

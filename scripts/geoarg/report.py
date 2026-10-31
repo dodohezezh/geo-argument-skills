@@ -1,8 +1,8 @@
 """Render a human-readable GeoArg report from a case.
 
-The report is rendered from one document model into two formats: Markdown for
-terminals and diffs, Word (.docx) for people who read reports in Word. Word is
-the default because the audit skill's deliverable is a reviewable document.
+One document model feeds two renderers (Markdown and Word) and two report
+languages (English and Simplified Chinese). Contract content is rendered as
+written; only the report frame is translated.
 """
 
 from __future__ import annotations
@@ -24,56 +24,160 @@ from .judge import judge
 #   ("note", text)
 Block = tuple[str, Any]
 
+LABELS: dict[str, dict[str, str]] = {
+    "en": {
+        "title": "GeoArg report: {title}",
+        "claim": "claim",
+        "statement": "statement",
+        "verdict": "verdict",
+        "rule_version": "rule version",
+        "flags": "flags",
+        "why": "Why this verdict",
+        "premises": "Premises",
+        "cps": "Ceteris paribus conditions",
+        "defeaters": "Defeaters",
+        "entailments": "Entailments",
+        "independence": "Independence",
+        "grounding": "Grounding",
+        "decisive": "Decisive tests",
+        "gaps": "Registered gaps",
+        "audit": "Audit",
+        "hard": "hard defeat",
+        "soft": "suspension",
+        "pending": "unresolved",
+        "none": "none",
+        "id": "id",
+        "state": "state",
+        "test": "test",
+        "severity": "severity",
+        "status": "status",
+        "risk": "risk",
+        "evidence": "evidence",
+        "declared_page": "declared page",
+        "found_page": "found page",
+        "outcome": "outcome",
+        "power": "power",
+        "result": "result",
+        "kind": "kind",
+        "description": "description",
+        "n_eff": "effective independent evidence: n_eff = {n_eff} out of {total} records (mean rho = {rho})",
+        "families": "families: {families}",
+        "warning": "warning: {warning}",
+        "unattached": "declared but unattached calibration: {items}",
+        "no_ledger": "No grounding ledger. Transcription-level evidence is unverified.",
+        "source": "Source: {path} ({pages} pages, {chars} chars, text layer: {layer}).",
+        "acceptance": "Acceptance rate: {rate} ({grounded}/{drafted} drafted quotes grounded).",
+        "problem": "Problem: {text}",
+        "warning_row": "Warning: {text}",
+        "na": "n/a",
+        "decisive_intro": "Base verdict is {verdict}. These single outcomes would retract the claim now:",
+        "decisive_none": "None found. The claim is already defeated, or the contract has no live unknown items.",
+    },
+    "zh": {
+        "title": "GeoArg 报告：{title}",
+        "claim": "主张",
+        "statement": "陈述",
+        "verdict": "判决",
+        "rule_version": "规则版本",
+        "flags": "标记",
+        "why": "判决理由",
+        "premises": "前提",
+        "cps": "其他条件不变条件",
+        "defeaters": "判废条件",
+        "entailments": "可检验蕴含",
+        "independence": "独立性",
+        "grounding": "接地",
+        "decisive": "决定性检验",
+        "gaps": "已登记缺口",
+        "audit": "审计",
+        "hard": "硬判决",
+        "soft": "中止",
+        "pending": "未决",
+        "none": "无",
+        "id": "编号",
+        "state": "状态",
+        "test": "检验",
+        "severity": "严重度",
+        "status": "状态",
+        "risk": "风险",
+        "evidence": "证据",
+        "declared_page": "声明页码",
+        "found_page": "命中页码",
+        "outcome": "结果",
+        "power": "判别力",
+        "result": "判决结果",
+        "kind": "种类",
+        "description": "描述",
+        "n_eff": "有效独立证据：n_eff = {n_eff} / {total} 条记录（平均 rho = {rho}）",
+        "families": "证据族：{families}",
+        "warning": "警戒：{warning}",
+        "unattached": "声明但未附着的校准：{items}",
+        "no_ledger": "无接地台账。转录级证据未经验证。",
+        "source": "来源：{path}（{pages} 页，{chars} 字符，文本层：{layer}）。",
+        "acceptance": "验收率：{rate}（{grounded}/{drafted} 条草拟引文已接地）。",
+        "problem": "问题：{text}",
+        "warning_row": "警戒：{text}",
+        "na": "不适用",
+        "decisive_intro": "基础判决为 {verdict}。以下单事件结果会立即撤回该主张：",
+        "decisive_none": "未找到。主张已被判决，或契约没有活的未知项。",
+    },
+}
+
+
+def _labels(lang: str) -> dict[str, str]:
+    return LABELS.get(lang, LABELS["en"])
+
 
 def _table(header: list[str], rows: list[list[str]]) -> Block:
     return ("table", (header, rows))
 
 
-def build(case: Case) -> dict:
+def build(case: Case, lang: str = "en") -> dict:
     """Build the document model shared by the Markdown and Word renderers."""
+    L = _labels(lang)
     result = judge(case)
     indep = independence_report(case)
     decisive = decisive_events(case)
     claim = case.claim
 
     meta: list[tuple[str, str]] = [
-        ("claim", f"{claim.get('id')} ({claim.get('kind')}, {claim.get('layer')})"),
-        ("statement", str(claim.get("statement", ""))),
-        ("verdict", result["verdict"]),
-        ("rule version", result["rule_version"]),
+        (L["claim"], f"{claim.get('id')} ({claim.get('kind')}, {claim.get('layer')})"),
+        (L["statement"], str(claim.get("statement", ""))),
+        (L["verdict"], result["verdict"]),
+        (L["rule_version"], result["rule_version"]),
     ]
     if result["flags"]:
-        meta.append(("flags", "; ".join(result["flags"])))
+        meta.append((L["flags"], "; ".join(result["flags"])))
 
     sections: list[dict] = []
 
     why: list[str] = []
-    for key, title in (("hard", "hard defeat"), ("soft", "suspension"), ("pending", "unresolved")):
+    for key, title in (("hard", L["hard"]), ("soft", L["soft"]), ("pending", L["pending"])):
         reasons = result["reasons"][key]
         if reasons:
             why.extend(f"{title}: {reason}" for reason in reasons)
         else:
-            why.append(f"{title}: none")
-    sections.append({"heading": "Why this verdict", "blocks": [("bullets", why)]})
+            why.append(f"{title}: {L['none']}")
+    sections.append({"heading": L["why"], "blocks": [("bullets", why)]})
 
     sections.append(
         {
-            "heading": "Premises",
-            "blocks": [_table(["id", "state", "statement"], [[p["id"], p["status"], p["statement"]] for p in result["premises"]])],
+            "heading": L["premises"],
+            "blocks": [_table([L["id"], L["state"], L["statement"]], [[p["id"], p["status"], p["statement"]] for p in result["premises"]])],
         }
     )
     sections.append(
         {
-            "heading": "Ceteris paribus conditions",
-            "blocks": [_table(["id", "state", "test"], [[c["id"], c["state"], c["test"]] for c in result["cps"]])],
+            "heading": L["cps"],
+            "blocks": [_table([L["id"], L["state"], L["test"]], [[c["id"], c["state"], c["test"]] for c in result["cps"]])],
         }
     )
     sections.append(
         {
-            "heading": "Defeaters",
+            "heading": L["defeaters"],
             "blocks": [
                 _table(
-                    ["id", "state", "severity", "test"],
+                    [L["id"], L["state"], L["severity"], L["test"]],
                     [[d["id"], d["state"], d["severity"], d["test"]] for d in result["defeaters"]],
                 )
             ],
@@ -81,10 +185,10 @@ def build(case: Case) -> dict:
     )
     sections.append(
         {
-            "heading": "Entailments",
+            "heading": L["entailments"],
             "blocks": [
                 _table(
-                    ["id", "status", "risk", "test"],
+                    [L["id"], L["status"], L["risk"], L["test"]],
                     [[e["id"], e["status"], e["risk"], e["test"]] for e in result["entailments"]],
                 )
             ],
@@ -92,14 +196,13 @@ def build(case: Case) -> dict:
     )
 
     indep_lines = [
-        f"effective independent evidence: n_eff = {indep['n_eff']} out of {indep['n_records']} records "
-        f"(mean rho = {indep['mean_rho']})",
-        f"families: {', '.join(indep['families']) or 'none'}",
+        L["n_eff"].format(n_eff=indep["n_eff"], total=indep["n_records"], rho=indep["mean_rho"]),
+        L["families"].format(families=", ".join(indep["families"]) or L["none"]),
     ]
-    indep_lines.extend(f"warning: {warning}" for warning in indep["warnings"])
+    indep_lines.extend(L["warning"].format(warning=warning) for warning in indep["warnings"])
     if indep["declared_calibration_not_attached"]:
-        indep_lines.append(f"declared but unattached calibration: {indep['declared_calibration_not_attached']}")
-    sections.append({"heading": "Independence", "blocks": [("bullets", indep_lines)]})
+        indep_lines.append(L["unattached"].format(items=indep["declared_calibration_not_attached"]))
+    sections.append({"heading": L["independence"], "blocks": [("bullets", indep_lines)]})
 
     grounding_blocks: list[Block] = []
     try:
@@ -110,7 +213,7 @@ def build(case: Case) -> dict:
         grounding_problems = [f"grounding ledger unreadable: {exc}"]
         grounding_warnings = []
     if ledger is None:
-        grounding_blocks.append(("p", "No grounding ledger. Transcription-level evidence is unverified."))
+        grounding_blocks.append(("p", L["no_ledger"]))
     else:
         pdf = ledger["pdf"]
         extracted = ledger["extracted"]
@@ -119,14 +222,19 @@ def build(case: Case) -> dict:
         grounding_blocks.append(
             (
                 "p",
-                f"Source: {pdf['path']} ({extracted['pages']} pages, {extracted['chars']} chars, text layer: {text_layer}).",
+                L["source"].format(
+                    path=pdf["path"], pages=extracted["pages"], chars=extracted["chars"], layer=text_layer
+                ),
             )
         )
         grounding_blocks.append(
             (
                 "p",
-                f"Acceptance rate: {rate if rate is not None else 'n/a'} "
-                f"({ledger['grounded']}/{ledger['drafted']} drafted quotes grounded).",
+                L["acceptance"].format(
+                    rate=rate if rate is not None else L["na"],
+                    grounded=ledger["grounded"],
+                    drafted=ledger["drafted"],
+                ),
             )
         )
         rows = [
@@ -134,36 +242,34 @@ def build(case: Case) -> dict:
             for rid, entry in ledger["records"].items()
         ]
         if rows:
-            grounding_blocks.append(_table(["evidence", "status", "declared page", "found page"], rows))
+            grounding_blocks.append(_table([L["evidence"], L["status"], L["declared_page"], L["found_page"]], rows))
     for problem in grounding_problems:
-        grounding_blocks.append(("p", f"Problem: {problem}"))
+        grounding_blocks.append(("p", L["problem"].format(text=problem)))
     for warning in grounding_warnings:
-        grounding_blocks.append(("p", f"Warning: {warning}"))
-    sections.append({"heading": "Grounding", "blocks": grounding_blocks})
+        grounding_blocks.append(("p", L["warning_row"].format(text=warning)))
+    sections.append({"heading": L["grounding"], "blocks": grounding_blocks})
 
-    decisive_blocks: list[Block] = [
-        ("p", f"Base verdict is {decisive['base_verdict']}. These single outcomes would retract the claim now:")
-    ]
+    decisive_blocks: list[Block] = [("p", L["decisive_intro"].format(verdict=decisive["base_verdict"]))]
     if decisive["events"]:
         decisive_blocks.append(
             _table(
-                ["outcome", "test", "power", "result"],
+                [L["outcome"], L["test"], L["power"], L["result"]],
                 [[e["label"], e["test"], e["power"], e["resulting_verdict"]] for e in decisive["events"]],
             )
         )
     else:
-        decisive_blocks.append(("p", "None found. The claim is already defeated, or the contract has no live unknown items."))
+        decisive_blocks.append(("p", L["decisive_none"]))
     decisive_blocks.append(("note", decisive["note"]))
-    sections.append({"heading": "Decisive tests", "blocks": decisive_blocks})
+    sections.append({"heading": L["decisive"], "blocks": decisive_blocks})
 
     gaps = case.argument.get("gaps", [])
     if gaps:
         sections.append(
             {
-                "heading": "Registered gaps",
+                "heading": L["gaps"],
                 "blocks": [
                     _table(
-                        ["kind", "severity", "description"],
+                        [L["kind"], L["severity"], L["description"]],
                         [[g.get("kind"), g.get("severity"), g.get("description")] for g in gaps],
                     )
                 ],
@@ -171,18 +277,18 @@ def build(case: Case) -> dict:
         )
 
     audit_lines = [f"{name}: {digest}" for name, digest in case_digest(case.root).items()]
-    sections.append({"heading": "Audit", "blocks": [("bullets", audit_lines)]})
+    sections.append({"heading": L["audit"], "blocks": [("bullets", audit_lines)]})
 
     return {
-        "title": f"GeoArg report: {case.argument.get('title', 'untitled')}",
+        "title": L["title"].format(title=case.argument.get("title", "untitled")),
         "meta": meta,
         "sections": sections,
     }
 
 
-def render(case: Case) -> str:
+def render(case: Case, lang: str = "en") -> str:
     """Render the document model as Markdown."""
-    model = build(case)
+    model = build(case, lang)
     out: list[str] = [f"# {model['title']}", ""]
     for label, value in model["meta"]:
         out.append(f"- {label}: {value}")
@@ -206,18 +312,23 @@ def render(case: Case) -> str:
     return "\n".join(out)
 
 
-def render_docx(case: Case, path: str | Path) -> Path:
+def render_docx(case: Case, path: str | Path, lang: str = "en") -> Path:
     """Render the document model as a Word document and return its path."""
     try:
         from docx import Document
+        from docx.oxml.ns import qn
         from docx.shared import Pt
     except ImportError as exc:  # pragma: no cover - dependency is declared
         raise RuntimeError("python-docx is required for Word reports: pip install python-docx") from exc
 
-    model = build(case)
+    model = build(case, lang)
     document = Document()
     document.core_properties.title = model["title"]
     document.add_heading(model["title"], level=0)
+    normal = document.styles["Normal"]
+    if lang == "zh":
+        normal.font.name = "Calibri"
+        normal.element.get_or_add_rPr().get_or_add_rFonts().set(qn("w:eastAsia"), "Microsoft YaHei")
     for label, value in model["meta"]:
         paragraph = document.add_paragraph(style="List Bullet")
         run = paragraph.add_run(f"{label}: ")

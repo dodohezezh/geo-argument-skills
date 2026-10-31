@@ -44,7 +44,7 @@ No network. Only PyYAML, pypdf and python-docx.
 | `geoarg judge <case>` | verdict and reason chain |
 | `geoarg independence <case>` | `n_eff / n`, mean rho, warnings |
 | `geoarg hit-set <case>` | single-event defeat paths ranked by power |
-| `geoarg report <case>` | Word report by default (`<case>/report.docx`); `--format md` prints Markdown |
+| `geoarg report <case>` | Word report by default (`<case>/report.docx`); `--format md` prints Markdown; `--lang zh` renders the report frame in Chinese |
 | `geoarg commit <case>` | hash-chained registry record |
 | `geoarg verify <case>` | recompute and report drift |
 | `geoarg ground <case> --pdf <paper>` | match every source quote against the PDF text layer, write a grounding ledger, report an acceptance rate |
