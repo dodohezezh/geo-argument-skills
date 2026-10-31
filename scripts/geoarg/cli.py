@@ -69,21 +69,20 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def _system_language() -> str:
     """Return the machine's UI language as a report language code ("zh" or "en")."""
+    try:
+        import ctypes
+
+        lang_id = ctypes.windll.kernel32.GetUserDefaultUILanguage()
+        return "zh" if (lang_id & 0x3FF) == 0x04 else "en"
+    except Exception:  # pragma: no cover - non-Windows fallback
+        pass
     import locale
 
     try:
-        code = locale.getlocale()[0] or ""
+        code = (locale.getlocale()[0] or "").lower()
     except (TypeError, ValueError):
         code = ""
-    if not code:
-        try:
-            import ctypes
-
-            lang_id = ctypes.windll.kernel32.GetUserDefaultUILanguage()
-            code = "zh" if (lang_id & 0x3FF) == 0x04 else "en"
-        except Exception:  # pragma: no cover - non-Windows fallback
-            code = "en"
-    return "zh" if code.lower().startswith("zh") else "en"
+    return "zh" if code.startswith("zh") or "chinese" in code else "en"
 
 
 def main(argv: list[str] | None = None) -> int:
