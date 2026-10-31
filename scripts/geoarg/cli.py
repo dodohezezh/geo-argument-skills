@@ -14,7 +14,7 @@ from .ground import GroundError, ground_records, load_ledger, validate_grounding
 from .hitting import decisive_events
 from .independence import report as independence_report
 from .judge import judge
-from .report import render
+from .report import render, render_docx
 
 
 def _emit_json(payload: object) -> None:
@@ -36,7 +36,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "hit-set": "the tests that would retract the claim now",
         "commit": "write a hash-chained registry record",
         "verify": "recompute a committed record and report mismatches",
-        "report": "render a markdown report",
+        "report": "write the audit report (Word by default)",
     }
     for name, help_text in specs.items():
         sub_parser = sub.add_parser(name, help=help_text)
@@ -45,7 +45,12 @@ def _build_parser() -> argparse.ArgumentParser:
         if name in ("commit", "verify"):
             sub_parser.add_argument("--registry", default=None, help="registry directory (default: <case>/.geoarg/registry)")
         if name == "report":
-            sub_parser.add_argument("--out", default=None, help="write markdown to this path instead of stdout")
+            sub_parser.add_argument("--format", choices=("docx", "md"), default="docx", help="output format (default: docx)")
+            sub_parser.add_argument(
+                "--out",
+                default=None,
+                help="output path (default: <case>/report.docx for docx, stdout for md)",
+            )
 
     ground_parser = sub.add_parser("ground", help="verify transcribed quotes against a source PDF")
     ground_parser.add_argument("case", help="case directory containing argument.yaml, evidence.yaml, test.yaml")
@@ -189,12 +194,17 @@ def main(argv: list[str] | None = None) -> int:
         return 0 if ok else 1
 
     if args.cmd == "report":
-        markdown = render(case)
-        if args.out:
-            Path(args.out).write_text(markdown, encoding="utf-8")
-            print(f"wrote {args.out}")
+        if args.format == "docx":
+            target = Path(args.out) if args.out else Path(case.root) / "report.docx"
+            render_docx(case, target)
+            print(f"wrote {target}")
         else:
-            print(markdown)
+            markdown = render(case)
+            if args.out:
+                Path(args.out).write_text(markdown, encoding="utf-8")
+                print(f"wrote {args.out}")
+            else:
+                print(markdown)
         return 0
 
     return 0  # pragma: no cover

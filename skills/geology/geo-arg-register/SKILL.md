@@ -35,8 +35,8 @@ Write the contract to be recomputable, not persuasive. The verdict is computed b
 6. **Declare the gaps.** List what the contract cannot express, with `kind` (cannot-express, ambiguous, missing-field, overspecified, other), a `description` of the information that cannot be carried, and `severity` (blocking, annoying, minor). A gap is instrumentation, not failure.
    Done when: `gaps` exists, or the contract says "none found" with one line of why.
 
-7. **Run the gate.** If any record is transcription level, run `geoarg ground <case> --pdf <paper>` and fix every `not-found` or `page-mismatch` quote before continuing. Then run `geoarg check <case>` and fix every problem, run `geoarg judge <case>` and `geoarg report <case> --out report.md`, and commit the verdict with `geoarg commit <case>`. If `geoarg` is not on PATH, use `python -m geoarg` for every command; a bare `.` works as the case path when you are inside the case directory.
-   Done when: `check` exits 0, every accepted transcription quote is `grounded`, the verdict prints, and the report contains a grounding table and a decisive-test table.
+7. **Run the gate.** If any record is transcription level, run `geoarg ground <case> --pdf <paper>` and fix every `not-found` or `page-mismatch` quote before continuing. Then run `geoarg check <case>` and fix every problem, run `geoarg judge <case>`, write the Word report with `geoarg report <case>` (it writes `<case>/report.docx`; add `--format md` only when Markdown is requested), and commit the verdict with `geoarg commit <case>`. If `geoarg` is not on PATH, use `python -m geoarg` for every command; a bare `.` works as the case path when you are inside the case directory.
+   Done when: `check` exits 0, every accepted transcription quote is `grounded`, the verdict prints, and `<case>/report.docx` exists with a grounding table and a decisive-test table.
 
 ## Rules
 

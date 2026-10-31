@@ -30,10 +30,11 @@ geoarg judge examples/south-atlantic
 geoarg independence examples/south-atlantic
 geoarg hit-set examples/south-atlantic
 geoarg ground examples/paper-demo --pdf examples/paper-demo/paper.pdf
+geoarg report examples/south-atlantic
 python -m unittest discover -s scripts/tests
 ```
 
-No network. Only PyYAML and pypdf.
+No network. Only PyYAML, pypdf and python-docx.
 
 ## Commands
 
@@ -43,7 +44,7 @@ No network. Only PyYAML and pypdf.
 | `geoarg judge <case>` | verdict and reason chain |
 | `geoarg independence <case>` | `n_eff / n`, mean rho, warnings |
 | `geoarg hit-set <case>` | single-event defeat paths ranked by power |
-| `geoarg report <case> --out report.md` | full markdown report |
+| `geoarg report <case>` | Word report by default (`<case>/report.docx`); `--format md` prints Markdown |
 | `geoarg commit <case>` | hash-chained registry record |
 | `geoarg verify <case>` | recompute and report drift |
 | `geoarg ground <case> --pdf <paper>` | match every source quote against the PDF text layer, write a grounding ledger, report an acceptance rate |

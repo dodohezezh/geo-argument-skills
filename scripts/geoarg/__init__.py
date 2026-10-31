@@ -9,6 +9,8 @@ alone, by anyone, without the model that wrote the contract.
 The grounding gate applies the same discipline to transcription: a quote
 declared in a contract is checked against the source PDF before it can count
 as accepted evidence.
+
+Reports render to Word (.docx) by default and to Markdown on request.
 """
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"

@@ -15,6 +15,7 @@ For agents working in this repository.
 - Tests: `python -m unittest discover -s scripts/tests`
 - Lint the example: `geoarg check examples/south-atlantic`
 - Grounded example: `geoarg ground examples/paper-demo --pdf examples/paper-demo/paper.pdf`
+- Reports: `geoarg report examples/south-atlantic` writes `examples/south-atlantic/report.docx` in Word (default); `--format md` prints Markdown.
 - Full smoke: `geoarg judge examples/south-atlantic && geoarg independence examples/south-atlantic`
 
 Run tests before committing. Keep the example cases clean; tests assert on their numbers (3 records, `n_eff = 1.2`, 13 decisive events) and on the grounding statuses of the demo case (3 grounded quotes, acceptance rate 1.0).

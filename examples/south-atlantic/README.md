@@ -15,7 +15,7 @@ geoarg check examples/south-atlantic
 geoarg judge examples/south-atlantic
 geoarg independence examples/south-atlantic
 geoarg hit-set examples/south-atlantic
-geoarg report examples/south-atlantic --out report.md
+geoarg report examples/south-atlantic
 ```
 
 Expected: `check` is clean; the verdict is `UNTESTED` (every test is still `planned`); `independence` reports `n_eff = 1.2 / 3`; `hit-set` lists 13 single outcomes that would retract or suspend the claim.
