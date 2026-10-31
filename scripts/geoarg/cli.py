@@ -46,8 +46,13 @@ def _build_parser() -> argparse.ArgumentParser:
             sub_parser.add_argument("--registry", default=None, help="registry directory (default: <case>/.geoarg/registry)")
         if name == "report":
             sub_parser.add_argument("--format", choices=("docx", "md"), default="docx", help="output format (default: docx)")
-            sub_parser.add_argument("--lang", choices=("en", "zh"), default="en", help="report language (default: en)")
-            sub_parser.add_argument("--full", action="store_true", help="write the full contract report instead of the one-page brief")
+            sub_parser.add_argument(
+                "--lang",
+                choices=("en", "zh", "auto"),
+                default="en",
+                help="report language (default: en; auto uses the machine system language)",
+            )
+            sub_parser.add_argument("--brief", action="store_true", help="write the one-page brief instead of the full report")
             sub_parser.add_argument(
                 "--out",
                 default=None,
@@ -60,6 +65,25 @@ def _build_parser() -> argparse.ArgumentParser:
     ground_parser.add_argument("--strict", action="store_true", help="exit non-zero if any declared quote is not grounded")
     ground_parser.add_argument("--json", action="store_true", help="emit JSON instead of text")
     return parser
+
+
+def _system_language() -> str:
+    """Return the machine's UI language as a report language code ("zh" or "en")."""
+    import locale
+
+    try:
+        code = locale.getlocale()[0] or ""
+    except (TypeError, ValueError):
+        code = ""
+    if not code:
+        try:
+            import ctypes
+
+            lang_id = ctypes.windll.kernel32.GetUserDefaultUILanguage()
+            code = "zh" if (lang_id & 0x3FF) == 0x04 else "en"
+        except Exception:  # pragma: no cover - non-Windows fallback
+            code = "en"
+    return "zh" if code.lower().startswith("zh") else "en"
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -198,10 +222,12 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "report":
         if args.format == "docx":
             target = Path(args.out) if args.out else Path(case.root) / "report.docx"
-            render_docx(case, target, args.lang, brief=not args.full)
+            lang = _system_language() if args.lang == "auto" else args.lang
+            render_docx(case, target, lang, brief=args.brief)
             print(f"wrote {target}")
         else:
-            markdown = render(case, args.lang, brief=not args.full)
+            lang = _system_language() if args.lang == "auto" else args.lang
+            markdown = render(case, lang, brief=args.brief)
             if args.out:
                 Path(args.out).write_text(markdown, encoding="utf-8")
                 print(f"wrote {args.out}")
