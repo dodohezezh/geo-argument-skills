@@ -1,0 +1,20 @@
+{
+  "name": "geo-argument-skills",
+  "description": "Two skills for checking geological arguments: contract registration and an independence plus discriminating-power audit.",
+  "version": "0.1.0",
+  "author": {
+    "name": "GeoArg contributors"
+  },
+  "license": "MIT",
+  "keywords": [
+    "geology",
+    "argumentation",
+    "defeasible-reasoning",
+    "skills",
+    "geoarg"
+  ],
+  "skills": [
+    "./skills/geology/geo-arg-register",
+    "./skills/geology/geo-arg-audit"
+  ]
+}

@@ -1,0 +1,95 @@
+# GeoArg 检验台账：南大西洋案例
+# 注意：discriminating_power 与 status 分开记录。通过（passed）但无判别力（none）= 结论仍未判别。
+schema_version: geoarg/0.1
+records:
+  - id: T1
+    name: 等时线拟合与闭合差检验
+    checks: [P1, E2]
+    method:
+      type: geometric-consistency
+      description: 用 M0–M4 等时线拟合欧拉旋转，计算两侧等时线在闭合位置的重叠/空隙量
+      implementation: pygplates（待接入）
+      threshold: 重叠/空隙 < 50 km
+      data_refs: [ev.airmag.sa-1997.m-series]
+    blind:
+      is_blind: false
+    discriminating_power: medium
+    status: planned
+
+  - id: T2
+    name: 断裂带小圆与欧拉极一致性检验
+    checks: [P2, D4, E1]
+    method:
+      type: geometric-consistency
+      description: 拟合断裂带迹线为绕 P0 的小圆，比较其极点与等时线拟合的欧拉极；同时检验迹线弯曲度是否超出小圆假设
+      implementation: pygplates + 自写最小二乘
+      threshold: 极点角距 < 2°；χ² 通过 95% 分位
+    blind:
+      is_blind: true
+      held_out: 留出 1/4 断裂带不参与拟合，仅用于检验
+    discriminating_power: high
+    status: planned
+
+  - id: T3
+    name: 两岸地质连续性与岸线假设检验
+    checks: [P3, CP3, D5]
+    method:
+      type: field-check
+      description: 比较两岸基底省、褶皱带在闭合位置的连续性与沿走向延续性；同时检验岸线/陆架坡折与刚体边界的偏差
+      threshold: 至少两条构造线在闭合后连续且沿走向延续 > 100 km
+    blind:
+      is_blind: true
+      held_out: 留出一侧的一段基底省不参与拟合
+    discriminating_power: medium
+    status: planned
+
+  - id: T4
+    name: 板内变形量评估
+    checks: [CP1, D2]
+    method:
+      type: literature-review
+      description: 汇总新生代以来南大西洋两岸的板内变形证据（地震、GPS、构造缩短），评估是否足以破坏刚性假设
+      threshold: 累计变形 < 50 km
+    blind:
+      is_blind: false
+    discriminating_power: medium
+    status: planned
+
+  - id: T5
+    name: 时间尺度版本一致性审计
+    checks: [CP2]
+    method:
+      type: literature-review
+      description: 核查三条证据族引用的 GPTS 版本是否一致；若不一致，标出对年龄的敏感度
+      threshold: 同一版本
+    blind:
+      is_blind: false
+    discriminating_power: none
+    status: planned
+    notes: 这是"通过也没用"的典型——任何板块重建都用同一时间尺度，该检验不判别假说。
+
+  - id: T6
+    name: 洋内微板块/多板块拓扑检查
+    checks: [D1]
+    method:
+      type: geometric-consistency
+      description: 检查洋壳区是否存在被忽略的微板块边界（磁异常条带错断、微板块残留）
+      threshold: 无未纳入的微板块边界
+    blind:
+      is_blind: false
+    discriminating_power: low
+    status: planned
+
+  - id: T7
+    name: 磁异常 one-off 错位检验
+    checks: [D3]
+    method:
+      type: geometric-consistency
+      description: 若某条异常错认一个，则两侧闭合差会出现系统性单侧偏移；检查闭合差的空间分布是否有此特征
+      implementation: 自写（闭合差按纬度分带统计）
+      threshold: 无系统性单侧偏移
+    blind:
+      is_blind: true
+      held_out: 留出一段等时线
+    discriminating_power: high
+    status: planned

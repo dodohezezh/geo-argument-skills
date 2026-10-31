@@ -1,0 +1,224 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://geoarg.local/schema/argument.schema.json",
+  "title": "GeoArg Argument（地质论证）",
+  "description": "一条结构化地质论证。v0.1 的契约决定：①前提要么有证据、要么是另一条论证的结论（禁止悬空前提出臆）；②凭据必须带 ceteris paribus 条件与判废条件，且每条都要挂检验；③蕴含必须是可检验预测（判别力通道）；④前提带独立性分组，同组不得当独立证据；⑤任何表达不了的东西写进 gaps（schema 自报不足）。",
+  "type": "object",
+  "required": ["schema_version", "id", "title", "domain", "claim", "premises", "inference", "entailments", "audit"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": "geoarg/0.1" },
+    "id": { "type": "string", "pattern": "^arg\\.[a-z0-9][a-z0-9._-]*$" },
+    "title": { "type": "string", "minLength": 4 },
+    "domain": {
+      "type": "string",
+      "enum": ["plate-tectonics", "stratigraphy", "petrology", "geomorphology", "geophysics", "other"]
+    },
+    "claim": { "$ref": "#/$defs/Claim" },
+    "premises": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/Premise" }
+    },
+    "inference": { "$ref": "#/$defs/Inference" },
+    "entailments": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Entailment" }
+    },
+    "dependencies": { "$ref": "#/$defs/Dependencies" },
+    "gaps": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Gap" }
+    },
+    "audit": { "$ref": "#/$defs/Audit" }
+  },
+  "$defs": {
+    "Layer": { "type": "string", "enum": ["L0", "L1", "L2", "L3", "L4"] },
+    "PremiseStatus": { "type": "string", "enum": ["untested", "supported", "defeated", "undetermined"] },
+    "ConditionState": { "type": "string", "enum": ["unknown", "holds", "fails"] },
+    "DefeaterState": { "type": "string", "enum": ["unknown", "established", "refuted"] },
+
+    "Claim": {
+      "type": "object",
+      "required": ["id", "statement", "kind", "layer"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^C[0-9]+(\\.[0-9]+)*$" },
+        "statement": { "type": "string", "minLength": 4 },
+        "kind": {
+          "type": "string",
+          "enum": ["reconstruction", "timing", "correlation", "mechanism", "existence", "classification"]
+        },
+        "layer": { "$ref": "#/$defs/Layer" },
+        "scope": { "type": "string", "description": "结论的时空范围与适用条件（缺省=全时空，通常意味着没想清楚）" },
+        "notes": { "type": "string" }
+      }
+    },
+
+    "Premise": {
+      "type": "object",
+      "required": ["id", "statement", "kind", "layer", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^P[0-9]+$" },
+        "statement": { "type": "string", "minLength": 3 },
+        "kind": {
+          "type": "string",
+          "enum": ["evidenced", "derived"],
+          "description": "evidenced=由证据直接支持；derived=是另一条论证的结论（禁止两种都不给）"
+        },
+        "layer": { "$ref": "#/$defs/Layer" },
+        "evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "pattern": "^ev\\.[a-z0-9][a-z0-9._-]*$" }
+        },
+        "argument_ref": { "type": "string", "pattern": "^arg\\.[a-z0-9][a-z0-9._-]*$" },
+        "test_refs": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^T[0-9]+$" }
+        },
+        "independence_group": {
+          "type": "string",
+          "description": "同一组内的前提共享数据/方法/校准，不得当作相互独立的证据；引擎据此报伪独立警告。"
+        },
+        "status": { "$ref": "#/$defs/PremiseStatus" },
+        "notes": { "type": "string" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "evidenced" } }, "required": ["kind"] },
+          "then": { "required": ["evidence_refs"] }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "derived" } }, "required": ["kind"] },
+          "then": { "required": ["argument_ref"] }
+        }
+      ]
+    },
+
+    "Inference": {
+      "type": "object",
+      "required": ["rule_id", "warrant", "cp", "defeaters"],
+      "additionalProperties": false,
+      "properties": {
+        "rule_id": { "type": "string", "pattern": "^W\\.[a-z0-9][a-z0-9-]*$" },
+        "warrant": { "type": "string", "description": "凭据：一般性推理规则本身（如刚性板块—欧拉旋转）" },
+        "cp": {
+          "type": "array",
+          "description": "ceteris paribus 条件：凭据成立所依赖的默认前提，逐条可检验",
+          "items": { "$ref": "#/$defs/Condition" }
+        },
+        "defeaters": {
+          "type": "array",
+          "description": "判废条件：使结论撤回或失效的情形，逐条可检验",
+          "items": { "$ref": "#/$defs/Defeater" }
+        }
+      }
+    },
+
+    "Condition": {
+      "type": "object",
+      "required": ["id", "statement", "cp_type", "state"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^CP[0-9]+$" },
+        "statement": { "type": "string", "minLength": 3 },
+        "cp_type": {
+          "type": "string",
+          "enum": ["structural", "temporal", "methodological", "calibration"]
+        },
+        "test_ref": { "type": "string", "pattern": "^T[0-9]+$" },
+        "state": { "$ref": "#/$defs/ConditionState" },
+        "notes": { "type": "string" }
+      }
+    },
+
+    "Defeater": {
+      "type": "object",
+      "required": ["id", "type", "statement", "severity", "state"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^D[0-9]+$" },
+        "type": {
+          "type": "string",
+          "enum": ["rebutting", "undercutting"],
+          "description": "rebutting=与结论本身冲突；undercutting=切断结论所依赖的推理链"
+        },
+        "statement": { "type": "string", "minLength": 3 },
+        "severity": { "type": "string", "enum": ["fatal", "degrading"] },
+        "test_ref": { "type": "string", "pattern": "^T[0-9]+$" },
+        "state": { "$ref": "#/$defs/DefeaterState" },
+        "notes": { "type": "string" }
+      }
+    },
+
+    "Entailment": {
+      "type": "object",
+      "required": ["id", "statement", "kind", "risk", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^E[0-9]+$" },
+        "statement": { "type": "string", "minLength": 3 },
+        "kind": {
+          "type": "string",
+          "enum": ["geometric-consistency", "quantitative", "blind-prediction", "spatial-pattern", "temporal-pattern"]
+        },
+        "test_ref": { "type": "string", "pattern": "^T[0-9]+$" },
+        "risk": {
+          "type": "string",
+          "enum": ["low", "medium", "high"],
+          "description": "冒险程度：high=只有本假说预测它，竞争假说通不过；low=各方都会预测它（无判别力）"
+        },
+        "status": { "$ref": "#/$defs/PremiseStatus" },
+        "notes": { "type": "string" }
+      }
+    },
+
+    "Dependencies": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "evidence_families": { "type": "array", "items": { "type": "string" } },
+        "shared_calibration": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "所有前提共享的外部校准源（时间尺度、模型版本）；替换会同时动摇多条论证"
+        },
+        "depends_on": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^arg\\.[a-z0-9][a-z0-9._-]*$" }
+        }
+      }
+    },
+
+    "Gap": {
+      "type": "object",
+      "required": ["kind", "description", "severity"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["cannot-express", "ambiguous", "missing-field", "overspecified", "other"]
+        },
+        "description": { "type": "string" },
+        "where": { "type": "string", "description": "填不进去的字段路径" },
+        "severity": { "type": "string", "enum": ["blocking", "annoying", "minor"] }
+      }
+    },
+
+    "Audit": {
+      "type": "object",
+      "required": ["author", "created", "updated", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "author": { "type": "string" },
+        "created": { "type": "string", "format": "date-time" },
+        "updated": { "type": "string", "format": "date-time" },
+        "version": { "type": "string" },
+        "reviewed_by": { "type": "array", "items": { "type": "string" } },
+        "source_case": { "type": "string" }
+      }
+    }
+  }
+}
