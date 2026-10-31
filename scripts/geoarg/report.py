@@ -72,6 +72,14 @@ LABELS: dict[str, dict[str, str]] = {
         "na": "n/a",
         "decisive_intro": "Base verdict is {verdict}. These single outcomes would retract the claim now:",
         "decisive_none": "None found. The claim is already defeated, or the contract has no live unknown items.",
+        "brief_title": "GeoArg brief: {title}",
+        "brief_line": "Verdict {verdict}: {hard} hard defeat(s), {soft} suspension(s), {pending} open item(s). Grounding acceptance {rate}. Effective independent evidence {n_eff} of {total}.",
+        "brief_summary": "Essentials",
+        "brief_more": "{more} more decisive events in the full report.",
+        "brief_only": "This brief lists the essentials. Run with --full for the complete contract report.",
+        "brief_warnings": "independence warnings: {count}",
+        "gaps_line": "registered gaps: {count} (blocking: {blocking})",
+        "no_ledger_short": "no grounding ledger (transcription evidence unverified)",
     },
     "zh": {
         "title": "GeoArg 报告：{title}",
@@ -120,6 +128,14 @@ LABELS: dict[str, dict[str, str]] = {
         "na": "不适用",
         "decisive_intro": "基础判决为 {verdict}。以下单事件结果会立即撤回该主张：",
         "decisive_none": "未找到。主张已被判决，或契约没有活的未知项。",
+        "brief_title": "GeoArg 简报：{title}",
+        "brief_line": "判决 {verdict}：硬判废 {hard} 条，中止 {soft} 条，未决 {pending} 项。接地验收率 {rate}。有效独立证据 {n_eff} / {total} 条。",
+        "brief_summary": "要点",
+        "brief_more": "另有 {more} 条决定性事件见完整报告。",
+        "brief_only": "本简报只列要点。完整契约报告用 --full。",
+        "brief_warnings": "独立性警戒：{count} 条",
+        "gaps_line": "登记缺口：{count} 条（blocking：{blocking}）",
+        "no_ledger_short": "无接地台账（转录级证据未经验证）",
     },
 }
 
@@ -286,9 +302,83 @@ def build(case: Case, lang: str = "en") -> dict:
     }
 
 
-def render(case: Case, lang: str = "en") -> str:
+def build_brief(case: Case, lang: str = "en") -> dict:
+    """Build the one-page brief: verdict, key numbers, top decisive tests."""
+    L = _labels(lang)
+    result = judge(case)
+    indep = independence_report(case)
+    decisive = decisive_events(case)
+    claim = case.claim
+
+    meta: list[tuple[str, str]] = [
+        (L["claim"], f"{claim.get('id')} ({claim.get('kind')}, {claim.get('layer')})"),
+        (L["statement"], str(claim.get("statement", ""))),
+    ]
+
+    hard = result["reasons"]["hard"]
+    soft = result["reasons"]["soft"]
+    pending = result["reasons"]["pending"]
+
+    try:
+        ledger = load_ledger(case.root)
+    except GroundError:
+        ledger = None
+    if ledger is not None:
+        rate = ledger["acceptance_rate"]
+        acceptance = rate if rate is not None else L["na"]
+    else:
+        acceptance = L["na"]
+
+    lines: list[str] = [
+        L["brief_line"].format(
+            verdict=result["verdict"],
+            hard=len(hard),
+            soft=len(soft),
+            pending=len(pending),
+            rate=acceptance,
+            n_eff=indep["n_eff"],
+            total=indep["n_records"],
+        )
+    ]
+    for title, items in ((L["hard"], hard), (L["soft"], soft), (L["pending"], pending)):
+        if items:
+            lines.append(f"{title}: {', '.join(items)}")
+    if result["flags"]:
+        lines.append(f"{L['flags']}: {'; '.join(result['flags'])}")
+    if ledger is None:
+        lines.append(L["no_ledger_short"])
+    if indep["warnings"]:
+        lines.append(L["brief_warnings"].format(count=len(indep["warnings"])))
+    gaps = case.argument.get("gaps", [])
+    if gaps:
+        blocking = sum(1 for gap in gaps if gap.get("severity") == "blocking")
+        lines.append(L["gaps_line"].format(count=len(gaps), blocking=blocking))
+
+    blocks: list[Block] = [("bullets", lines)]
+    events = decisive["events"]
+    top = events[:3]
+    if top:
+        blocks.append(
+            _table(
+                [L["outcome"], L["test"], L["power"], L["result"]],
+                [[e["label"], e["test"], e["power"], e["resulting_verdict"]] for e in top],
+            )
+        )
+        if len(events) > len(top):
+            blocks.append(("note", L["brief_more"].format(more=len(events) - len(top))))
+    else:
+        blocks.append(("p", L["decisive_none"]))
+    blocks.append(("note", L["brief_only"]))
+    return {
+        "title": L["brief_title"].format(title=case.argument.get("title", "untitled")),
+        "meta": meta,
+        "sections": [{"heading": L["brief_summary"], "blocks": blocks}],
+    }
+
+
+def render(case: Case, lang: str = "en", brief: bool = False) -> str:
     """Render the document model as Markdown."""
-    model = build(case, lang)
+    model = build_brief(case, lang) if brief else build(case, lang)
     out: list[str] = [f"# {model['title']}", ""]
     for label, value in model["meta"]:
         out.append(f"- {label}: {value}")
@@ -302,6 +392,8 @@ def render(case: Case, lang: str = "en") -> str:
                 out.extend(f"- {line}" for line in payload)
             elif kind == "table":
                 header, rows = payload
+                if out and out[-1] != "":
+                    out.append("")
                 out.append("| " + " | ".join(header) + " |")
                 out.append("|" + "|".join(["---"] * len(header)) + "|")
                 for row in rows:
@@ -312,7 +404,7 @@ def render(case: Case, lang: str = "en") -> str:
     return "\n".join(out)
 
 
-def render_docx(case: Case, path: str | Path, lang: str = "en") -> Path:
+def render_docx(case: Case, path: str | Path, lang: str = "en", brief: bool = False) -> Path:
     """Render the document model as a Word document and return its path."""
     try:
         from docx import Document
@@ -321,7 +413,7 @@ def render_docx(case: Case, path: str | Path, lang: str = "en") -> Path:
     except ImportError as exc:  # pragma: no cover - dependency is declared
         raise RuntimeError("python-docx is required for Word reports: pip install python-docx") from exc
 
-    model = build(case, lang)
+    model = build_brief(case, lang) if brief else build(case, lang)
     document = Document()
     document.core_properties.title = model["title"]
     document.add_heading(model["title"], level=0)

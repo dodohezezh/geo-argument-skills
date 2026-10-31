@@ -77,5 +77,32 @@ class ReportModelTest(unittest.TestCase):
         self.assertIn("| P1 ", text)
 
 
+class BriefReportTest(unittest.TestCase):
+    def test_brief_is_one_page_markdown(self) -> None:
+        text = render(load_case(CASE), brief=True)
+        self.assertTrue(text.startswith("# GeoArg brief:"))
+        self.assertIn("## Essentials", text)
+        self.assertIn("Grounding acceptance", text)
+        self.assertNotIn("## Premises", text)
+        self.assertIn("--full", text)
+
+    def test_full_report_keeps_the_tables(self) -> None:
+        text = render(load_case(CASE))
+        self.assertIn("## Premises", text)
+        self.assertIn("| P1 ", text)
+
+    def test_cli_defaults_to_brief_and_full_flag_restores_tables(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            case_dir = Path(tmp) / "south-atlantic"
+            shutil.copytree(CASE, case_dir)
+            with contextlib.redirect_stdout(io.StringIO()) as out:
+                self.assertEqual(cli.main(["report", str(case_dir), "--format", "md"]), 0)
+            self.assertIn("## Essentials", out.getvalue())
+            self.assertNotIn("## Premises", out.getvalue())
+            with contextlib.redirect_stdout(io.StringIO()) as out:
+                self.assertEqual(cli.main(["report", str(case_dir), "--format", "md", "--full"]), 0)
+            self.assertIn("## Premises", out.getvalue())
+
+
 if __name__ == "__main__":
     unittest.main()

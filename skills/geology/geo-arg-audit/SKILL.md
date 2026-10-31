@@ -26,7 +26,7 @@ The verdict without this audit is a number without a unit. Run `geoarg judge` fo
 5. **Find the decisive test now.** From the hit-set, choose the outcome with the highest power and the lowest cost that would change the verdict. If no single test changes it, say the claim is currently undecidable and name what would make it decidable.
    Done when: the report names one test (or states that none exists) and what its outcome would do to the verdict.
 
-6. **Write the confidence statement.** One paragraph: verdict, `n_eff / n`, the acceptance rate when transcription evidence is involved, the power profile of the gating tests, the decisive test, and any blocking gap. Keep the numbers in the sentence. Then write the deliverable with `geoarg report <case>`; it writes `<case>/report.docx` in Word by default. Pass `--lang zh` when the user wants the report frame in Chinese; contract content is rendered as written. Use `--format md` only when the user asks for Markdown.
+6. **Write the confidence statement.** One paragraph: verdict, `n_eff / n`, the acceptance rate when transcription evidence is involved, the power profile of the gating tests, the decisive test, and any blocking gap. Keep the numbers in the sentence. Then write the deliverable with `geoarg report <case>`; it writes a one-page brief to `<case>/report.docx` in Word by default. Add `--full` when the user asks for the complete contract report. Pass `--lang zh` when the user wants the report frame in Chinese; contract content is rendered as written. Use `--format md` only when the user asks for Markdown.
    Done when: the statement stands alone without the rest of the report, it uses counts rather than adjectives, and `<case>/report.docx` exists.
 
 ## Rules
@@ -35,7 +35,7 @@ The verdict without this audit is a number without a unit. Run `geoarg judge` fo
 - Independence lives in the calibration chain: timescale, model, data release, inference step. Annotate it there.
 - Quote grounding is not interpretation. A grounded quote can still be quoted for the wrong claim; a `not-found` quote is a fabrication and must not be kept.
 - Report the acceptance rate (`grounded / drafted`) whenever transcription-level records are in play. An argument can rest on one independent line and on zero grounded quotes at the same time.
-- The deliverable is Word by default: `geoarg report <case>` writes `<case>/report.docx`. Markdown (`--format md`) is for diffs and terminals, not for review.
+- The deliverable is a one-page Word brief by default: `geoarg report <case>` writes `<case>/report.docx` with the verdict, the three numbers, and the top three decisive tests. `--full` writes the complete report. Markdown (`--format md`) is for diffs and terminals, not for review.
 - Support requires a test that could have failed. A passed test with power `none` leaves the claim undetermined.
 - Report `n_eff / n` explicitly. Write "5 records, 1.8 effective lines", not "several independent lines".
 - Treat the rho values in `independence.py` as estimates: state them, and say what a calibration study would change.

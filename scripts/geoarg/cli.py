@@ -36,7 +36,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "hit-set": "the tests that would retract the claim now",
         "commit": "write a hash-chained registry record",
         "verify": "recompute a committed record and report mismatches",
-        "report": "write the audit report (Word by default)",
+        "report": "write the report (one-page brief in Word by default)",
     }
     for name, help_text in specs.items():
         sub_parser = sub.add_parser(name, help=help_text)
@@ -47,6 +47,7 @@ def _build_parser() -> argparse.ArgumentParser:
         if name == "report":
             sub_parser.add_argument("--format", choices=("docx", "md"), default="docx", help="output format (default: docx)")
             sub_parser.add_argument("--lang", choices=("en", "zh"), default="en", help="report language (default: en)")
+            sub_parser.add_argument("--full", action="store_true", help="write the full contract report instead of the one-page brief")
             sub_parser.add_argument(
                 "--out",
                 default=None,
@@ -197,10 +198,10 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "report":
         if args.format == "docx":
             target = Path(args.out) if args.out else Path(case.root) / "report.docx"
-            render_docx(case, target, args.lang)
+            render_docx(case, target, args.lang, brief=not args.full)
             print(f"wrote {target}")
         else:
-            markdown = render(case, args.lang)
+            markdown = render(case, args.lang, brief=not args.full)
             if args.out:
                 Path(args.out).write_text(markdown, encoding="utf-8")
                 print(f"wrote {args.out}")

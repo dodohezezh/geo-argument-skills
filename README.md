@@ -49,7 +49,7 @@ python -m unittest discover -s scripts/tests
 | `geoarg judge <case>` | 计算判决与理由链 |
 | `geoarg independence <case>` | 有效证据数 `n_eff / n`、平均相关系数、独立性警告 |
 | `geoarg hit-set <case>` | 单事件判废路径，按判别力排序 |
-| `geoarg report <case>` | 生成 Word 报告（默认 `<case>/report.docx`）；`--format md` 输出 Markdown；`--lang zh` 输出中文报告框架 |
+| `geoarg report <case>` | 生成 Word 报告（默认 `<case>/report.docx`）；`--format md` 输出 Markdown；`--lang zh` 中文框架；`--full` 完整版（默认一页简报） |
 | `geoarg commit <case>` | 写入 `.geoarg/registry/`，记录输入与引擎的哈希 |
 | `geoarg verify <case>` | 重算并报告任何漂移：输入被改、引擎被改、判决被改 |
 | `geoarg ground <case> --pdf <paper>` | 把每条 `source_locator` 的引文与 PDF 文本层比对，写接地台账并算验收率 |
