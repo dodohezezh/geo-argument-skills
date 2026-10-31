@@ -65,7 +65,7 @@ class ReportModelTest(unittest.TestCase):
             with contextlib.redirect_stdout(io.StringIO()) as out:
                 code = cli.main(["report", str(case_dir), "--format", "md"])
             self.assertEqual(code, 0)
-            self.assertIn("# GeoArg report:", out.getvalue())
+            self.assertIn("# GeoArg brief:", out.getvalue())
 
     def test_chinese_report_translates_the_frame_only(self) -> None:
         text = render(load_case(CASE), lang="zh")
