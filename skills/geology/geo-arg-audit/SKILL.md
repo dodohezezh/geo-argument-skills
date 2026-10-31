@@ -9,6 +9,10 @@ An audit answers two questions the contract's verdict cannot answer by itself: *
 
 The verdict without this audit is a number without a unit. Run `geoarg judge` for the verdict, `geoarg independence` for the effective evidence count, and `geoarg hit-set` for the tests that would retract the claim now. If `geoarg` is not on PATH, use `python -m geoarg` in every command.
 
+## Preflight
+
+Run `geoarg --version` before anything else. If the command is missing, stop and tell the user the engine is not installed; do not compute verdicts, effective evidence counts, or acceptance rates by hand. If the version is older than 0.4, ask the user to upgrade before continuing.
+
 ## Steps
 
 1. **Map the evidence families.** List the records from `evidence.yaml` with family, independence class, and shared sources. Follow the calibration chain: two records that share a timescale, a plate model, or a data release are one line of evidence wearing two names.

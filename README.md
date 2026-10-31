@@ -41,6 +41,20 @@ geoarg report examples/south-atlantic
 python -m unittest discover -s scripts/tests
 ```
 
+## 作为项目安装
+
+引擎和两个技能作为一个包发行；装好后把技能目录装进 Agent 宿主：
+
+```bash
+pip install .
+geoarg install-skills              # 装到已存在的 ~/.dsh/skills、~/.claude/skills、./.dsh/skills、./.claude/skills
+geoarg install-skills --dest <dir>  # 或指定一个目录（可重复）
+geoarg install-skills --check       # 只比对已装副本与包内版本，报告漂移
+geoarg doctor                       # 引擎、依赖、已装技能一起自检
+```
+
+两个技能的第一步都是 `geoarg --version`：引擎缺失或低于 0.4 就停，不手算判决、`n_eff` 或验收率。wheel 内置技能副本（`geoarg/_skills`），因此 pip 安装后不依赖仓库目录。
+
 ## 引擎命令
 
 | 命令 | 作用 |

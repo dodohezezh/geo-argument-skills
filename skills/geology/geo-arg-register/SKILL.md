@@ -15,6 +15,10 @@ Write the contract to be recomputable, not persuasive. The verdict is computed b
 - The user asks what evidence supports a claim, or what would falsify it.
 - A paper, report, or map makes a claim that will be cited by someone else.
 
+## Preflight
+
+Run `geoarg --version` before anything else. If the command is missing, stop and tell the user the engine is not installed; do not compute verdicts, effective evidence counts, or acceptance rates by hand. If the version is older than 0.4, ask the user to upgrade before continuing.
+
 ## Steps
 
 1. **Name the claim.** One sentence, one scope: what is claimed, where, and when. Choose `kind` (reconstruction, timing, correlation, mechanism, existence, classification) and `layer` (L0 definition to L4 interpretation).

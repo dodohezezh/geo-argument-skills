@@ -59,6 +59,22 @@ def _build_parser() -> argparse.ArgumentParser:
                 help="output path (default: <case>/report.docx for docx, stdout for md)",
             )
 
+    install_parser = sub.add_parser("install-skills", help="install the bundled skills into agent skill directories")
+    install_parser.add_argument("--source", default=None, help="skills directory to install from (default: the skills shipped with geoarg)")
+    install_parser.add_argument(
+        "--dest",
+        action="append",
+        default=None,
+        help="target skills directory (repeatable; default: every existing ~/.dsh/skills, ~/.claude/skills, ./.dsh/skills, ./.claude/skills)",
+    )
+    install_parser.add_argument("--check", action="store_true", help="compare installed copies and report drift instead of writing")
+    install_parser.add_argument("--link", action="store_true", help="symlink instead of copying (falls back to copying)")
+    install_parser.add_argument("--dry-run", action="store_true", help="print the planned actions")
+    install_parser.add_argument("--json", action="store_true", help="emit JSON instead of text")
+
+    doctor_parser = sub.add_parser("doctor", help="self-check the engine, its dependencies, and installed skills")
+    doctor_parser.add_argument("--json", action="store_true", help="emit JSON instead of text")
+
     ground_parser = sub.add_parser("ground", help="verify transcribed quotes against a source PDF")
     ground_parser.add_argument("case", help="case directory containing argument.yaml, evidence.yaml, test.yaml")
     ground_parser.add_argument("--pdf", required=True, help="path to the source PDF")
@@ -87,6 +103,10 @@ def _system_language() -> str:
 
 def main(argv: list[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
+    if args.cmd == "install-skills":
+        return _cmd_install_skills(args)
+    if args.cmd == "doctor":
+        return _cmd_doctor(args)
     try:
         case = load_case(args.case)
     except ContractError as exc:
@@ -235,6 +255,63 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     return 0  # pragma: no cover
+
+
+def _cmd_install_skills(args: argparse.Namespace) -> int:
+    from . import install as installer
+
+    try:
+        source = installer.source_root(args.source)
+        targets = installer.resolve_targets(args.dest)
+    except (FileNotFoundError, NotADirectoryError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    if not targets:
+        print("error: no skill directory found. Checked:", file=sys.stderr)
+        for name, path in installer.candidates():
+            print(f"  {name}: {path}", file=sys.stderr)
+        print("Install into a specific directory with --dest <dir>.", file=sys.stderr)
+        return 2
+    if args.check:
+        rows = installer.check(source, targets)
+        if args.json:
+            _emit_json(rows)
+        else:
+            for row in rows:
+                print(f"{row['status']:<9} {row['root']}  {row['skill']}")
+        drifted = [row for row in rows if row["status"] != "ok"]
+        if not args.json:
+            print("skills in sync" if not drifted else f"{len(drifted)} of {len(rows)} skill(s) differ")
+        return 0 if not drifted else 1
+    rows = installer.plan(source, targets)
+    if args.dry_run:
+        for row in rows:
+            print(f"would {row['action']}: {row['root']}  {row['skill']}")
+        return 0
+    reports = installer.apply(rows, link=args.link)
+    if args.json:
+        _emit_json(reports)
+    else:
+        for row in reports:
+            print(f"{row['action']:<7} {row['root']}  {row['skill']}  {row['digest'][:12]}")
+        print(f"installed {len(reports)} skill copy(-ies) from {source}")
+    return 0
+
+
+def _cmd_doctor(args: argparse.Namespace) -> int:
+    from . import install as installer
+
+    checks = installer.environment()
+    if args.json:
+        _emit_json(checks)
+    else:
+        for check in checks:
+            mark = "ok  " if check["ok"] else "FAIL"
+            print(f"{mark} {check['name']}: {check['detail']}")
+    failed = [check for check in checks if not check["ok"]]
+    if not args.json:
+        print("doctor: all checks passed" if not failed else f"doctor: {len(failed)} check(s) failed")
+    return 0 if not failed else 1
 
 
 if __name__ == "__main__":  # pragma: no cover
