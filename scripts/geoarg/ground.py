@@ -13,13 +13,12 @@ import hashlib
 import json
 import re
 import unicodedata
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from .contract import Case
 
-GROUND_SCHEMA_VERSION = "geoarg/ground/0.1"
+GROUND_SCHEMA_VERSION = "geoarg/ground/0.2"
 MIN_TEXT_CHARS = 20
 
 GROUNDED = "grounded"
@@ -174,7 +173,6 @@ def ground_records(case: Case, pdf_path: str | Path) -> dict[str, Any]:
         "drafted": drafted,
         "grounded": grounded,
         "acceptance_rate": round(grounded / drafted, 3) if drafted else None,
-        "grounded_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
     }
 
 
