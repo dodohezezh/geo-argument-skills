@@ -1,0 +1,57 @@
+schema_version: geoarg/0.6
+id: cover-age
+title: 'Cover age: the cover is younger than the dated basement'
+domain: plate-tectonics
+profile:
+  primary: geochronology
+  rationale: The claim inherits its age bound from the basement argument it links to.
+claim:
+  id: C1
+  statement: The overlying cover is younger than 2.6 Ga.
+  kind: timing
+  layer: L1
+  scope: one measured section above the basement
+premises:
+- id: P1
+  statement: The basement gneiss below the cover is older than 2.6 Ga.
+  kind: derived
+  layer: L1
+  status: undetermined
+  argument_ref: basement-age
+- id: P2
+  statement: The cover lies above the basement gneiss with a depositional contact.
+  kind: evidenced
+  layer: L1
+  status: supported
+  evidence_refs:
+  - ev.contact
+inference:
+  rule_id: W.superposition
+  warrant: A unit deposited on an older basement is younger than the basement where the
+    contact is depositional and not faulted.
+  cp:
+  - id: CP1
+    statement: The contact is depositional, not a fault.
+    cp_type: structural
+    state: unknown
+    test_ref: T1
+  defeaters:
+  - id: D1
+    type: undercutting
+    statement: The contact is a low-angle fault that omits section.
+    severity: fatal
+    state: unknown
+    test_ref: T1
+entailments:
+- id: E1
+  statement: The cover contains no clasts of the dated basement gneiss.
+  kind: temporal-pattern
+  risk: medium
+  status: untested
+  test_ref: T1
+gaps: []
+audit:
+  author: geoarg workspace demo
+  created: '2026-11-01'
+  updated: '2026-11-01'
+  version: '1.0'

@@ -1,0 +1,120 @@
+name: stratigraphy-sequence-boundary
+title: Correlate a sequence boundary across a basin
+domain: stratigraphy
+description: >-
+  Correlate one mapped surface between sections using a logged contact plus
+  regional mapping. The load-bearing assumption is that the surface is a time
+  surface rather than a facies boundary.
+argument: |
+  # template: stratigraphy-sequence-boundary; replace every TODO
+  schema_version: geoarg/0.6
+  id: '{{id}}'
+  title: '{{title}}'
+  domain: stratigraphy
+  claim:
+    id: C1
+    statement: '{{claim}}'
+    kind: correlation
+    layer: L1
+    scope: TODO - state the basin area and the stratigraphic interval
+  premises:
+  - id: P1
+    statement: TODO - the logged contact in the reference section is the surface in question.
+    kind: evidenced
+    layer: L1
+    status: undetermined
+    evidence_refs: [ev.log]
+  - id: P2
+    statement: TODO - the surface can be mapped continuously between the sections.
+    kind: evidenced
+    layer: L1
+    status: undetermined
+    evidence_refs: [ev.map]
+  inference:
+    rule_id: W.sequence-boundary
+    warrant: A continuous mapped surface that marks the same contact in logged sections correlates the sections.
+    cp:
+    - id: CP1
+      statement: TODO - no fault or unconformity repeats or omits the interval between sections.
+      cp_type: structural
+      state: unknown
+      test_ref: T1
+    defeaters:
+    - id: D1
+      type: undercutting
+      statement: TODO - the surface is a facies boundary that diachronously crosses time lines.
+      severity: fatal
+      state: unknown
+      test_ref: T1
+  entailments:
+  - id: E1
+    statement: TODO - a third section shows the same surface at a consistent position.
+    kind: geometric-consistency
+    risk: medium
+    status: untested
+    test_ref: T1
+  dependencies:
+    evidence_families: [field-mapping, sedimentology]
+    shared_calibration: []
+    depends_on: []
+  gaps: []
+  audit:
+    author: TODO - author
+    created: '{{today}}'
+    updated: '{{today}}'
+    version: 0.1-draft
+evidence: |
+  # template: stratigraphy-sequence-boundary; every record is disputed until grounded
+  schema_version: geoarg/0.6
+  records:
+  - id: ev.log
+    kind: observation
+    layer: L1
+    statement: TODO - the measured section and the contact it records.
+    source:
+      citation: TODO - full reference for the measured section
+    coverage:
+      spatial_extent: TODO - one logged section
+      coverage_fraction: 0.0
+      detectability: 0.0
+    independence:
+      family: field-mapping
+      independence_class: physical
+      derived_from: []
+      shared_sources: []
+    verification:
+      level: interpretation
+    status: disputed
+  - id: ev.map
+    kind: observation
+    layer: L1
+    statement: TODO - the mapped extent of the surface between sections.
+    source:
+      citation: TODO - full reference for the map
+    coverage:
+      spatial_extent: TODO - basin-scale map
+      coverage_fraction: 0.0
+      detectability: 0.0
+    independence:
+      family: field-mapping
+      independence_class: physical
+      derived_from: []
+      shared_sources: []
+    verification:
+      level: interpretation
+    status: disputed
+test: |
+  # template: stratigraphy-sequence-boundary
+  schema_version: geoarg/0.6
+  records:
+  - id: T1
+    name: TODO - walk the surface in the field between two sections
+    checks: [CP1, D1]
+    method:
+      type: field-check
+      description: TODO - how the contact is traced and logged between sections
+    blind:
+      is_blind: false
+    discriminating_power: none
+    status: planned
+    cost: 2

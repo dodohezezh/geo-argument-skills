@@ -1,0 +1,516 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://geoarg.local/schema/argument.schema.json",
+  "title": "GeoArg Argument（地质论证）",
+  "description": "一条结构化地质论证。契约的决定：①前提要么有证据、要么是另一条论证的结论（禁止悬空前提出臆）；②凭据必须带 ceteris paribus 条件与判废条件，且每条都要挂检验；③蕴含必须是可检验预测（判别力通道）；④前提带独立性分组，同组不得当独立证据；⑤任何表达不了的东西写进 gaps（schema 自报不足）。",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "id",
+    "title",
+    "domain",
+    "claim",
+    "premises",
+    "inference",
+    "entailments",
+    "audit",
+    "gaps"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "geoarg/0.6"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Ledger-unique identifier; the contract only requires a non-empty string."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 4
+    },
+    "domain": {
+      "type": "string",
+      "description": "Values may be widened by a domain pack; contract.validate is authoritative."
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "primary"
+      ],
+      "properties": {
+        "primary": {
+          "type": "string",
+          "enum": [
+            "general-geology",
+            "geochronology",
+            "planetary-geology",
+            "tectonics"
+          ]
+        },
+        "secondary": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "general-geology",
+              "geochronology",
+              "planetary-geology",
+              "tectonics"
+            ]
+          }
+        },
+        "rationale": {
+          "type": "string"
+        }
+      }
+    },
+    "claim": {
+      "$ref": "#/$defs/Claim"
+    },
+    "premises": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/Premise"
+      }
+    },
+    "inference": {
+      "$ref": "#/$defs/Inference"
+    },
+    "entailments": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Entailment"
+      }
+    },
+    "dependencies": {
+      "$ref": "#/$defs/Dependencies"
+    },
+    "gaps": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Gap"
+      }
+    },
+    "audit": {
+      "$ref": "#/$defs/Audit"
+    }
+  },
+  "$defs": {
+    "Layer": {
+      "type": "string",
+      "enum": [
+        "L0",
+        "L1",
+        "L2",
+        "L3",
+        "L4"
+      ]
+    },
+    "PremiseStatus": {
+      "type": "string",
+      "enum": [
+        "untested",
+        "supported",
+        "defeated",
+        "undetermined"
+      ]
+    },
+    "ConditionState": {
+      "type": "string",
+      "enum": [
+        "unknown",
+        "holds",
+        "fails"
+      ]
+    },
+    "DefeaterState": {
+      "type": "string",
+      "enum": [
+        "unknown",
+        "established",
+        "refuted"
+      ]
+    },
+    "Claim": {
+      "type": "object",
+      "required": [
+        "id",
+        "statement",
+        "kind",
+        "layer",
+        "scope"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^C[0-9]+(\\.[0-9]+)*$"
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 4
+        },
+        "kind": {
+          "type": "string",
+          "description": "Values may be widened by a domain pack; contract.validate is authoritative."
+        },
+        "layer": {
+          "$ref": "#/$defs/Layer"
+        },
+        "scope": {
+          "type": "string",
+          "description": "结论的时空范围与适用条件（缺省=全时空，通常意味着没想清楚）"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "Premise": {
+      "type": "object",
+      "required": [
+        "id",
+        "statement",
+        "kind",
+        "layer",
+        "status"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^P[0-9]+$"
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 3
+        },
+        "kind": {
+          "type": "string",
+          "description": "evidenced=由证据直接支持；derived=是另一条论证的结论（禁止两种都不给） Values may be widened by a domain pack; contract.validate is authoritative."
+        },
+        "layer": {
+          "$ref": "#/$defs/Layer"
+        },
+        "evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^ev\\.[a-z0-9][a-z0-9._-]*$"
+          }
+        },
+        "argument_ref": {
+          "type": "string",
+          "minLength": 1,
+          "description": "被引用论证的 id 或案例路径；解析顺序见 workspace.yaml（工作区 id、相对路径、同级目录）。格式约定为 arg.*，但 contract.validate 不强制前缀。"
+        },
+        "test_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^T[0-9]+$"
+          }
+        },
+        "independence_group": {
+          "type": "string",
+          "description": "同一组内的前提共享数据/方法/校准，不得当作相互独立的证据；引擎据此报伪独立警告。"
+        },
+        "status": {
+          "$ref": "#/$defs/PremiseStatus"
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "evidenced"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "evidence_refs"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "derived"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "argument_ref"
+            ]
+          }
+        }
+      ]
+    },
+    "Inference": {
+      "type": "object",
+      "required": [
+        "rule_id",
+        "warrant",
+        "cp",
+        "defeaters"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "rule_id": {
+          "type": "string",
+          "pattern": "^W\\.[a-z0-9][a-z0-9-]*$"
+        },
+        "warrant": {
+          "type": "string",
+          "description": "凭据：一般性推理规则本身（如刚性板块—欧拉旋转）"
+        },
+        "cp": {
+          "type": "array",
+          "description": "ceteris paribus 条件：凭据成立所依赖的默认前提，逐条可检验",
+          "items": {
+            "$ref": "#/$defs/Condition"
+          }
+        },
+        "defeaters": {
+          "type": "array",
+          "description": "判废条件：使结论撤回或失效的情形，逐条可检验",
+          "items": {
+            "$ref": "#/$defs/Defeater"
+          }
+        }
+      }
+    },
+    "Condition": {
+      "type": "object",
+      "required": [
+        "id",
+        "statement",
+        "cp_type",
+        "state",
+        "test_ref"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^CP[0-9]+$"
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 3
+        },
+        "cp_type": {
+          "type": "string",
+          "description": "Values may be widened by a domain pack; contract.validate is authoritative."
+        },
+        "test_ref": {
+          "type": "string",
+          "pattern": "^T[0-9]+$"
+        },
+        "state": {
+          "$ref": "#/$defs/ConditionState"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "Defeater": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "statement",
+        "severity",
+        "state",
+        "test_ref"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^D[0-9]+$"
+        },
+        "type": {
+          "type": "string",
+          "description": "rebutting=与结论本身冲突；undercutting=切断结论所依赖的推理链 Values may be widened by a domain pack; contract.validate is authoritative."
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 3
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "fatal",
+            "degrading"
+          ]
+        },
+        "test_ref": {
+          "type": "string",
+          "pattern": "^T[0-9]+$"
+        },
+        "state": {
+          "$ref": "#/$defs/DefeaterState"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "Entailment": {
+      "type": "object",
+      "required": [
+        "id",
+        "statement",
+        "kind",
+        "risk",
+        "status",
+        "test_ref"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^E[0-9]+$"
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 3
+        },
+        "kind": {
+          "type": "string",
+          "description": "Values may be widened by a domain pack; contract.validate is authoritative."
+        },
+        "test_ref": {
+          "type": "string",
+          "pattern": "^T[0-9]+$"
+        },
+        "risk": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "description": "冒险程度：high=只有本假说预测它，竞争假说通不过；low=各方都会预测它（无判别力）"
+        },
+        "status": {
+          "$ref": "#/$defs/PremiseStatus"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "Dependencies": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "evidence_families": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "shared_calibration": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "所有前提共享的外部校准源（时间尺度、模型版本）；替换会同时动摇多条论证"
+        },
+        "depends_on": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "Gap": {
+      "type": "object",
+      "required": [
+        "kind",
+        "description",
+        "severity"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "description": "Values may be widened by a domain pack; contract.validate is authoritative."
+        },
+        "description": {
+          "type": "string"
+        },
+        "where": {
+          "type": "string",
+          "description": "填不进去的字段路径"
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "blocking",
+            "annoying",
+            "minor"
+          ]
+        }
+      }
+    },
+    "Audit": {
+      "type": "object",
+      "required": [
+        "author",
+        "created",
+        "updated",
+        "version"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "author": {
+          "type": "string"
+        },
+        "created": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "version": {
+          "type": "string"
+        },
+        "reviewed_by": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "source_case": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

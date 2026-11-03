@@ -1,7 +1,10 @@
-schema_version: geoarg/0.2
+schema_version: geoarg/0.6
 id: paper-demo
 title: 'Paper demo: a dated unconformity from a source PDF'
 domain: plate-tectonics
+profile:
+  primary: geochronology
+  rationale: 主张的可信度主要取决于年代学标定与不整合面的解释。
 claim:
   id: C1
   statement: The basal unconformity is a 12.3 Ma sequence boundary.
@@ -13,21 +16,21 @@ premises:
   statement: A zircon U-Pb age of 12.3 Ma dates the basal unconformity.
   kind: evidenced
   layer: L1
-  status: accepted
+  status: supported
   evidence_refs:
   - ev.dated.zircon
 - id: P2
   statement: The unconformity is traceable across the basin for 180 km.
   kind: evidenced
   layer: L1
-  status: accepted
+  status: supported
   evidence_refs:
   - ev.extent.mapping
 - id: P3
   statement: Bioturbated silts above the surface record a marine flooding event.
   kind: evidenced
   layer: L1
-  status: accepted
+  status: supported
   evidence_refs:
   - ev.flood.silt
 inference:

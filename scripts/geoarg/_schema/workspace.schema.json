@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://geoarg.local/schema/workspace.schema.json",
+  "title": "GeoArg workspace（一组论证及其引用关系）",
+  "description": "把一个目录下的若干案例组织成工作区：给出论证 id 到案例目录的映射，让 derived 前提可以解析到另一条论证。",
+  "type": "object",
+  "required": ["schema_version"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": "geoarg/workspace/0.1" },
+    "id": { "type": "string", "description": "工作区标识，例如 lucy.crater-project" },
+    "title": { "type": "string", "description": "工作区标题" },
+    "arguments": {
+      "type": "array",
+      "description": "论证 id 到案例目录的映射；derived 前提的 argument_ref 先在这里查",
+      "items": {
+        "type": "object",
+        "required": ["id", "case"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "minLength": 1, "description": "论证 id，对应 argument.yaml 的 id" },
+          "case": { "type": "string", "minLength": 1, "description": "相对本目录（或绝对）的案例目录" },
+          "label": { "type": "string", "description": "给人看的短名" }
+        }
+      }
+    }
+  }
+}

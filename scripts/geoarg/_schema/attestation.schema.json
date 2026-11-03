@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://geoarg.local/schema/attestation.schema.json",
+  "title": "GeoArg 交付物绑定（attestation）",
+  "description": "把已经渲染好的 report/card 与作者给定的评述段落绑定到某一条已提交记录：文件摘要、记录摘要、引擎摘要与运行环境。verify 会重新计算这些摘要并报告不一致。",
+  "type": "object",
+  "required": ["schema_version", "claim_id", "record_sha256", "created_at", "deliverables"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": "geoarg/attestation/0.1" },
+    "claim_id": { "type": "string" },
+    "record_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "绑定的 registry 记录摘要" },
+    "rule_version": { "type": "string" },
+    "engine_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "created_at": { "type": "string" },
+    "note": { "type": ["string", "null"] },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "geoarg": { "type": "string" },
+        "python": { "type": "string" },
+        "platform": { "type": "string" }
+      }
+    },
+    "deliverables": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/entry" },
+      "description": "报告与阅读卡文件"
+    },
+    "judgment": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/entry" },
+      "description": "作者给定的评述段落文件"
+    }
+  },
+  "$defs": {
+    "entry": {
+      "type": "object",
+      "required": ["path", "sha256", "bytes"],
+      "additionalProperties": false,
+      "properties": {
+        "path": { "type": "string", "minLength": 1, "description": "相对案例目录的路径；案例外文件记绝对路径" },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "bytes": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

@@ -1,0 +1,39 @@
+schema_version: geoarg/domain/0.1
+name: stratigraphy
+title: Stratigraphy pack
+description: Sequence correlation from biostratigraphic markers.
+enums:
+  domains:
+  - stratigraphy
+  claim_kinds:
+  - sequence-correlation
+  method_types:
+  - biostratigraphy
+  - sequence-stratigraphy
+  evidence_kinds:
+  - biostratigraphic-marker
+  independence_classes:
+  - same-biozone
+  profiles:
+  - stratigraphy
+default_profile:
+  primary: stratigraphy
+  rationale: Correlation depends on marker ranges and the mapped geometry.
+test_suggestions:
+  sequence-correlation:
+  - method: biostratigraphy
+    why: A marker zone gives the correlation an age meaning.
+  - method: sequence-stratigraphy
+    why: The stacking pattern checks the geometric interpretation.
+evidence_families:
+- name: biostratigraphy
+  independence_class: method
+  why: Fossil ranges are read independently of the log correlation.
+- name: sedimentology
+  why: Facies observations are independent of the marker ranges.
+grounding:
+  formats:
+  - pdf
+  - markdown
+  notes:
+  - Quote the marker range chart and the correlated boundary together.

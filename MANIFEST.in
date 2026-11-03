@@ -1,5 +1,6 @@
 include README.md
 include README.en.md
+include CHANGELOG.md
 include LICENSE
 include CLAUDE.md
 include GLOSSARY.md
@@ -9,7 +10,9 @@ include MANIFEST.in
 recursive-include skills *
 recursive-include docs *
 recursive-include examples *
-recursive-include schema *.json
+recursive-include scripts/geoarg/_schema *.json
+recursive-include scripts/geoarg/_patterns *.yaml
+recursive-include scripts/geoarg/_skills *
 recursive-include scripts/geoarg *.py
 recursive-include scripts/tests *.py
 global-exclude __pycache__ *.pyc

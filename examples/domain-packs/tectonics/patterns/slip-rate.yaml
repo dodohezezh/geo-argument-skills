@@ -1,0 +1,136 @@
+name: tectonics-slip-rate
+title: Slip rate from an offset marker and its age
+domain: plate-tectonics
+description: >-
+  Estimate a fault slip rate from a measured offset and the age of the offset
+  marker. The argument depends on the offset and the age belonging to the same
+  displacement episode.
+argument: |
+  # template: tectonics-slip-rate; replace every TODO
+  schema_version: geoarg/0.6
+  id: '{{id}}'
+  title: '{{title}}'
+  domain: plate-tectonics
+  claim:
+    id: C1
+    statement: '{{claim}}'
+    kind: reconstruction
+    layer: L1
+    scope: TODO - state the fault reach and the time window
+  premises:
+  - id: P1
+    statement: TODO - the total offset of the marker across the fault is measured.
+    kind: evidenced
+    layer: L1
+    status: undetermined
+    evidence_refs: [ev.offset]
+  - id: P2
+    statement: TODO - the age of the displaced marker is known.
+    kind: evidenced
+    layer: L1
+    status: undetermined
+    evidence_refs: [ev.age]
+  inference:
+    rule_id: W.slip-rate
+    warrant: Displacement accumulated over a known time interval gives an average slip rate.
+    cp:
+    - id: CP1
+      statement: TODO - the offset marker is the same feature on both sides of the fault.
+      cp_type: methodological
+      state: unknown
+      test_ref: T1
+    - id: CP2
+      statement: TODO - the marker records a single displacement episode with no later reworking.
+      cp_type: temporal
+      state: unknown
+      test_ref: T2
+    defeaters:
+    - id: D1
+      type: rebutting
+      statement: TODO - part of the offset predates or postdates the dated marker.
+      severity: fatal
+      state: unknown
+      test_ref: T1
+  entailments:
+  - id: E1
+    statement: TODO - an independent geodetic rate agrees with the geological rate within uncertainty.
+    kind: quantitative
+    risk: high
+    status: untested
+    test_ref: T2
+  dependencies:
+    evidence_families: [tectonics, geochronology]
+    shared_calibration: []
+    depends_on: []
+  gaps: []
+  audit:
+    author: TODO - author
+    created: '{{today}}'
+    updated: '{{today}}'
+    version: 0.1-draft
+evidence: |
+  # template: tectonics-slip-rate; every record is disputed until grounded
+  schema_version: geoarg/0.6
+  records:
+  - id: ev.offset
+    kind: measurement
+    layer: L1
+    statement: TODO - the measured offset, its marker, and its uncertainty.
+    source:
+      citation: TODO - full reference for the offset measurement
+    coverage:
+      spatial_extent: TODO - the fault reach surveyed
+      coverage_fraction: 0.0
+      detectability: 0.0
+    independence:
+      family: tectonics
+      independence_class: physical
+      derived_from: []
+      shared_sources: []
+    verification:
+      level: interpretation
+    status: disputed
+  - id: ev.age
+    kind: measurement
+    layer: L1
+    statement: TODO - the dating method, the material, and the age with uncertainty.
+    source:
+      citation: TODO - full reference for the age
+    coverage:
+      spatial_extent: TODO - where the dated material was sampled
+      coverage_fraction: 0.0
+      detectability: 0.0
+    independence:
+      family: geochronology
+      independence_class: method
+      derived_from: []
+      shared_sources: []
+    verification:
+      level: interpretation
+    status: disputed
+test: |
+  # template: tectonics-slip-rate
+  schema_version: geoarg/0.6
+  records:
+  - id: T1
+    name: TODO - re-survey the offset marker across the fault
+    checks: [CP1, D1]
+    method:
+      type: field-check
+      description: TODO - how the marker is matched across the fault
+    blind:
+      is_blind: false
+    discriminating_power: none
+    status: planned
+    cost: 3
+  - id: T2
+    name: TODO - compare with an independent geodetic rate
+    checks: [CP2, E1]
+    method:
+      type: numerical-model
+      description: TODO - which geodetic solution and how it is compared
+    blind:
+      is_blind: false
+    discriminating_power: none
+    status: planned
+    cost: 2

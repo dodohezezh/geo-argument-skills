@@ -1,0 +1,20 @@
+schema_version: geoarg/0.6
+records:
+- id: ev.contact
+  kind: observation
+  layer: L1
+  statement: The cover lies above the basement gneiss with a depositional contact.
+  source:
+    citation: Synthetic workspace fixture, cover-age case
+  coverage:
+    spatial_extent: one measured section
+    coverage_fraction: 0.4
+    detectability: 0.7
+  independence:
+    family: field-mapping
+    independence_class: physical
+    derived_from: []
+    shared_sources: []
+  verification:
+    level: interpretation
+  status: accepted

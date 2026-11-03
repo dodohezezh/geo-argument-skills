@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://geoarg.local/schema/bundle.schema.json",
+  "title": "GeoArg paper bundle（一篇论文的多条主张）",
+  "description": "把若干 GeoArg 案例按论文组织起来。论文结论取所有必需主张里最弱的一条。",
+  "type": "object",
+  "required": ["schema_version", "claims"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": "geoarg/bundle/0.1" },
+    "id": { "type": "string", "description": "组的标识，例如 paper.2026.example" },
+    "title": { "type": "string", "description": "论文标题" },
+    "claims": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["case"],
+        "additionalProperties": false,
+        "properties": {
+          "case": { "type": "string", "minLength": 1, "description": "相对本目录的案例目录" },
+          "label": { "type": "string", "description": "在这篇论文里这条主张叫什么" },
+          "required": { "type": "boolean", "description": "是否计入论文结论（默认 true）" }
+        }
+      }
+    }
+  }
+}

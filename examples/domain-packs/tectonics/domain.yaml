@@ -1,0 +1,40 @@
+schema_version: geoarg/domain/0.1
+name: tectonics
+title: Tectonics pack
+description: Slip rates from offset markers and fault dating.
+enums:
+  domains:
+  - plate-tectonics
+  claim_kinds:
+  - slip-rate
+  method_types:
+  - paleoseismology
+  - geodesy
+  - cosmogenic-nuclide
+  evidence_kinds:
+  - offset-measurement
+  independence_classes:
+  - same-fault
+default_profile:
+  primary: tectonics
+  secondary:
+  - geochronology
+  rationale: A slip rate combines a displacement measurement with a date.
+test_suggestions:
+  slip-rate:
+  - method: paleoseismology
+    why: Trenching checks the offset and the rupture history together.
+  - method: cosmogenic-nuclide
+    why: Surface dating puts an independent age on the offset marker.
+evidence_families:
+- name: paleoseismology
+  independence_class: method
+  why: Trenching observes the offset directly.
+- name: geodesy
+  why: Geodetic strain is independent of the geologic offset.
+grounding:
+  formats:
+  - pdf
+  - html
+  notes:
+  - Quote the offset measurement and the dating table.

@@ -1,7 +1,12 @@
-schema_version: geoarg/0.2
+schema_version: geoarg/0.6
 id: arg.south-atlantic.m0
 title: 南大西洋 M0 附近的刚性板块重建
 domain: plate-tectonics
+profile:
+  primary: tectonics
+  secondary:
+  - geochronology
+  rationale: 主张是裂谷边缘的刚性板块重建，校准链依赖 GPTS 年龄标尺。
 claim:
   id: C1
   statement: 非洲板块与南美板块在 M0 等时线时刻可由一个欧拉旋转（极点 P0、角 θ0）从现今位置复原。

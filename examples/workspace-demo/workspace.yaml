@@ -1,0 +1,10 @@
+schema_version: geoarg/workspace/0.1
+id: overlying-strata-demo
+title: Two linked arguments, one workspace
+arguments:
+- id: basement-age
+  case: basement-age
+  label: Basement age
+- id: cover-age
+  case: cover-age
+  label: Cover age

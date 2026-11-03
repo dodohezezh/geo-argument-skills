@@ -1,0 +1,209 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://geoarg.local/schema/evidence.schema.json",
+  "title": "GeoArg Evidence（证据台账一条）",
+  "description": "一条证据记录。契约决定：①没有 coverage 字段就不得用'没观测到'来支持任何结论；②独立性必须显式标注（族、派生来源、共享校准）；③verification.level 区分转录/测量/解释——只有转录级可以直接提升为观测量，解释级必须走论证；④转录级引文必须带 source_locator，并由 geoarg ground 与源 PDF 比对，grounded 之后才允许 accepted。",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "records"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "geoarg/0.6"
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Record"
+      }
+    },
+    "claim_id": {
+      "type": "string"
+    }
+  },
+  "$defs": {
+    "Record": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "layer",
+        "statement",
+        "source",
+        "coverage",
+        "independence",
+        "verification",
+        "status"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Ledger-unique identifier; the contract only requires a non-empty string."
+        },
+        "kind": {
+          "type": "string",
+          "description": "Values may be widened by a domain pack; contract.validate is authoritative."
+        },
+        "layer": {
+          "type": "string",
+          "enum": [
+            "L1",
+            "L2",
+            "L3"
+          ]
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 3
+        },
+        "source": {
+          "type": "object",
+          "required": [
+            "citation"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "citation": {
+              "type": "string"
+            },
+            "doi": {
+              "type": "string"
+            },
+            "dataset": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            },
+            "access": {
+              "type": "string"
+            }
+          }
+        },
+        "source_locator": {
+          "type": "object",
+          "description": "转录级的原文锚点。geoarg ground 用它把引文与源 PDF 比对；只有 grounded 的转录级证据才能保持 accepted。",
+          "required": [
+            "page",
+            "quote"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "page": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "quote": {
+              "type": "string",
+              "minLength": 3
+            }
+          }
+        },
+        "coverage": {
+          "type": "object",
+          "description": "覆盖与探测能力。没有它，'未观测到'不能当作'不存在'。",
+          "required": [
+            "spatial_extent",
+            "coverage_fraction",
+            "detectability"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "spatial_extent": {
+              "type": "string"
+            },
+            "temporal_extent": {
+              "type": "string"
+            },
+            "resolution": {
+              "type": "string"
+            },
+            "coverage_fraction": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "该区域/问题上实际被观测覆盖的比例"
+            },
+            "detectability": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "若目标存在，该方法能探测到的概率"
+            },
+            "sample_count": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "independence": {
+          "type": "object",
+          "required": [
+            "family",
+            "independence_class"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "family": {
+              "type": "string",
+              "description": "证据族标识；跨论证比较独立性时用"
+            },
+            "derived_from": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^ev\\.[a-z0-9][a-z0-9._-]*$"
+              }
+            },
+            "shared_sources": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "共享的外部输入（时间尺度版本、板块模型、同一批采集）"
+            },
+            "independence_class": {
+              "type": "string",
+              "description": "physical=不同物理机制；method=不同方法；data=不同数据集但同方法；shared-calibration=共享校准源（独立性最弱） Values may be widened by a domain pack; contract.validate is authoritative."
+            }
+          }
+        },
+        "verification": {
+          "type": "object",
+          "required": [
+            "level"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "level": {
+              "type": "string",
+              "description": "transcription=转录级（可机检/可复算）；measurement=测量级（可重复）；interpretation=解释级（不得直接提升为 L1 观测） Values may be widened by a domain pack; contract.validate is authoritative."
+            },
+            "verified_by": {
+              "type": "string"
+            },
+            "reproduced": {
+              "type": "boolean"
+            }
+          }
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "accepted",
+            "disputed",
+            "retracted",
+            "superseded"
+          ]
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

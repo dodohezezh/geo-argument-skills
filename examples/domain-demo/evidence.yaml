@@ -1,0 +1,20 @@
+schema_version: geoarg/0.6
+records:
+- id: ev.tephra.fingerprint
+  kind: measurement
+  layer: L1
+  statement: A glass-shard major-element fingerprint matches one eruption at 12.3 ka.
+  source:
+    citation: Synthetic et al. (2026), domain-demo fixture
+  coverage:
+    spatial_extent: one logged section
+    coverage_fraction: 0.2
+    detectability: 0.7
+  independence:
+    family: tephrochronology
+    independence_class: method
+    derived_from: []
+    shared_sources: []
+  verification:
+    level: measurement
+  status: accepted

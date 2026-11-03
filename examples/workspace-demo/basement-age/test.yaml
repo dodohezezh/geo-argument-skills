@@ -1,0 +1,16 @@
+schema_version: geoarg/0.6
+records:
+- id: T1
+  name: Check zircon inheritance with a second mineral
+  checks:
+  - CP1
+  - D1
+  - E1
+  method:
+    type: statistical
+    description: Date a second mineral phase from the same sample and compare the ages.
+  blind:
+    is_blind: false
+  discriminating_power: high
+  status: planned
+  cost: 3

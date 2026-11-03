@@ -7,10 +7,10 @@ deterministic on purpose: the verdict must be recomputable from the contract
 alone, by anyone, without the model that wrote the contract.
 
 The grounding gate applies the same discipline to transcription: a quote
-declared in a contract is checked against the source PDF before it can count
+declared in a contract is checked against the source document before it can count
 as accepted evidence.
 
 Reports render to Word (.docx) by default and to Markdown on request.
 """
 
-__version__ = "0.4.0"
+__version__ = "1.7.1"

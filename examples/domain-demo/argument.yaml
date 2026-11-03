@@ -1,0 +1,51 @@
+schema_version: geoarg/0.6
+id: domain-demo
+title: 'Quaternary age model from a tephra marker'
+domain: quaternary-geology
+profile:
+  primary: general-geology
+  rationale: The claim is a Quaternary age model built from one tephra fingerprint.
+claim:
+  id: C1
+  statement: The tephra marker at 42 cm records a single eruption at about 12.3 ka.
+  kind: age-model
+  layer: L1
+  scope: one logged section plus regional mapping
+premises:
+- id: P1
+  statement: A glass-shard major-element fingerprint matches one eruption at 12.3 ka.
+  kind: evidenced
+  layer: L1
+  status: supported
+  evidence_refs:
+  - ev.tephra.fingerprint
+inference:
+  rule_id: W.tephra-marker
+  warrant: A primary tephra layer carries the geochemical fingerprint of one eruption,
+    so the layer dates that eruption where the shards are not reworked.
+  cp:
+  - id: CP1
+    statement: The dated glass shards are primary and not reworked after deposition.
+    cp_type: methodological
+    state: unknown
+    test_ref: T1
+  defeaters:
+  - id: D1
+    type: rebutting
+    statement: The dated glass shards are reworked from an older tephra.
+    severity: fatal
+    state: unknown
+    test_ref: T1
+entailments:
+- id: E1
+  statement: No second tephra layer lies within the sampled interval.
+  kind: temporal-pattern
+  risk: medium
+  status: untested
+  test_ref: T1
+gaps: []
+audit:
+  author: geoarg domain demo
+  created: '2026-11-02'
+  updated: '2026-11-02'
+  version: '0.1'

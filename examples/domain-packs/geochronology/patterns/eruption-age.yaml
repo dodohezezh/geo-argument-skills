@@ -1,0 +1,120 @@
+name: geochronology-age-bracket
+title: Age bracket from two dated horizons
+domain: geochronology
+description: >-
+  Bracket an event between an older dated horizon and a younger dated horizon.
+  The argument is only as strong as the assumption that both dates belong to
+  their host horizons.
+argument: |
+  # template: geochronology-age-bracket; replace every TODO
+  schema_version: geoarg/0.6
+  id: '{{id}}'
+  title: '{{title}}'
+  domain: geochronology
+  claim:
+    id: C1
+    statement: '{{claim}}'
+    kind: eruption-age
+    layer: L1
+    scope: TODO - state the spatial and temporal scope of the event
+  premises:
+  - id: P1
+    statement: TODO - the older dated horizon lies below (or predates) the event.
+    kind: evidenced
+    layer: L1
+    status: undetermined
+    evidence_refs: [ev.upper]
+  - id: P2
+    statement: TODO - the younger dated horizon lies above (or postdates) the event.
+    kind: evidenced
+    layer: L1
+    status: undetermined
+    evidence_refs: [ev.lower]
+  inference:
+    rule_id: W.age-bracket
+    warrant: If one dated horizon predates the event and another postdates it, the event lies between them.
+    cp:
+    - id: CP1
+      statement: TODO - the dated material formed with its host horizon (no inheritance or reworking).
+      cp_type: methodological
+      state: unknown
+      test_ref: T1
+    defeaters:
+    - id: D1
+      type: rebutting
+      statement: TODO - some dated grains are inherited or reworked, so at least one bound is wrong.
+      severity: fatal
+      state: unknown
+      test_ref: T1
+  entailments:
+  - id: E1
+    statement: TODO - a third independent date falls inside the bracket.
+    kind: temporal-pattern
+    risk: medium
+    status: untested
+    test_ref: T1
+  dependencies:
+    evidence_families: [geochronology]
+    shared_calibration: []
+    depends_on: []
+  gaps: []
+  audit:
+    author: TODO - author
+    created: '{{today}}'
+    updated: '{{today}}'
+    version: 0.1-draft
+evidence: |
+  # template: geochronology-age-bracket; every record is disputed until grounded
+  schema_version: geoarg/0.6
+  records:
+  - id: ev.upper
+    kind: measurement
+    layer: L1
+    statement: TODO - the older date, its material, and its stratigraphic position.
+    source:
+      citation: TODO - full reference for the older date
+    coverage:
+      spatial_extent: TODO - where the dated sample was taken
+      coverage_fraction: 0.0
+      detectability: 0.0
+    independence:
+      family: geochronology
+      independence_class: method
+      derived_from: []
+      shared_sources: []
+    verification:
+      level: interpretation
+    status: disputed
+  - id: ev.lower
+    kind: measurement
+    layer: L1
+    statement: TODO - the younger date, its material, and its stratigraphic position.
+    source:
+      citation: TODO - full reference for the younger date
+    coverage:
+      spatial_extent: TODO - where the dated sample was taken
+      coverage_fraction: 0.0
+      detectability: 0.0
+    independence:
+      family: geochronology
+      independence_class: method
+      derived_from: []
+      shared_sources: []
+    verification:
+      level: interpretation
+    status: disputed
+test: |
+  # template: geochronology-age-bracket
+  schema_version: geoarg/0.6
+  records:
+  - id: T1
+    name: TODO - test the closure/interpretation of both dates
+    checks: [CP1, D1]
+    method:
+      type: tephrochronology
+      description: TODO - how the samples and their host horizons are re-examined
+    blind:
+      is_blind: false
+    discriminating_power: none
+    status: planned
+    cost: 2

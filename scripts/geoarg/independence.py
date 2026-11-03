@@ -51,12 +51,61 @@ def effective_n(records: list[dict[str, Any]]) -> tuple[float, float]:
     return n_eff, rho_bar
 
 
+def _n_eff_at(n: int, rho: float) -> float:
+    if n < 2:
+        return float(n)
+    return n / (1.0 + (n - 1) * rho)
+
+
+def stress(records: list[dict[str, Any]], rho_bar: float) -> dict[str, Any]:
+    """Show how n_eff moves when the assumed correlation is wrong.
+
+    The rho values are inferred from declared fields, not measured, so the
+    point estimate alone invites over-confidence. These scenarios keep the
+    count fixed and vary the assumed pairwise correlation from 0 (independent)
+    to 1 (one line in disguise).
+    """
+    n = len(records)
+    scenarios = []
+    for rho in (0.0, 0.25, 0.5, 0.75, 1.0):
+        scenarios.append({"assumed_rho": rho, "n_eff": round(_n_eff_at(n, rho), 2)})
+    for multiplier in (0.5, 2.0):
+        rho = min(1.0, max(0.0, rho_bar * multiplier))
+        scenarios.append(
+            {
+                "assumed_rho": round(rho, 3),
+                "n_eff": round(_n_eff_at(n, rho), 2),
+                "multiplier": multiplier,
+            }
+        )
+    values = [item["n_eff"] for item in scenarios]
+    return {
+        "scenarios": scenarios,
+        "min": min(values),
+        "max": max(values),
+        "note": "n_eff if every pair's rho were the assumed value; the reported n_eff sits at "
+        "mean_rho, this range shows how sensitive that number is",
+    }
+
+
 def report(case: Case) -> dict[str, Any]:
-    """Build the independence report for the premises' evidence records."""
+    """Build the independence report for the premises' evidence records.
+
+    A record that is disputed, retracted, or superseded cannot support a
+    premise, so it does not count as independent evidence either. Records are
+    deduplicated: one record cited twice is still one line of evidence.
+    """
     refs: list[str] = []
     for premise in case.argument.get("premises", []):
         refs.extend(premise.get("evidence_refs") or [])
-    records = [case.evidence_by_id[r] for r in refs if r in case.evidence_by_id]
+    refs = list(dict.fromkeys(refs))
+    referenced = [case.evidence_by_id[r] for r in refs if r in case.evidence_by_id]
+    records = [r for r in referenced if r.get("status") == "accepted"]
+    excluded = [
+        {"id": r.get("id"), "status": r.get("status")}
+        for r in referenced
+        if r.get("status") != "accepted"
+    ]
     n_eff, rho_bar = effective_n(records)
 
     pairs = []
@@ -109,7 +158,9 @@ def report(case: Case) -> dict[str, Any]:
         "families": families,
         "pairs": pairs,
         "warnings": warnings,
+        "excluded_records": excluded,
         "declared_calibration_not_attached": undeclared,
+        "stress": stress(records, rho_bar),
         "note": "n_eff = n / (1 + (n - 1) * mean_rho); rho is inferred from the shared "
         "calibration/method/data claims recorded in evidence.yaml",
     }

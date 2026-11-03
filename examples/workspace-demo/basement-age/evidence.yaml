@@ -1,0 +1,20 @@
+schema_version: geoarg/0.6
+records:
+- id: ev.zircon.age
+  kind: measurement
+  layer: L1
+  statement: A concordant U-Pb zircon age of 2.72 Ga was measured in the basement gneiss.
+  source:
+    citation: Synthetic workspace fixture, basement-age case
+  coverage:
+    spatial_extent: one sampled outcrop
+    coverage_fraction: 0.1
+    detectability: 0.8
+  independence:
+    family: geochronology
+    independence_class: method
+    derived_from: []
+    shared_sources: []
+  verification:
+    level: measurement
+  status: accepted

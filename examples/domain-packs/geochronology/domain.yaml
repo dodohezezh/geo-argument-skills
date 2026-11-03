@@ -1,0 +1,39 @@
+schema_version: geoarg/domain/0.1
+name: geochronology
+title: Geochronology pack
+description: Eruption ages from tephra and proximal markers.
+enums:
+  domains:
+  - geochronology
+  claim_kinds:
+  - eruption-age
+  method_types:
+  - tephrochronology
+  - cosmogenic-nuclide
+  evidence_kinds:
+  - eruption-marker
+  independence_classes:
+  - same-ash-fall
+  profiles:
+  - geochronology
+default_profile:
+  primary: geochronology
+  rationale: The claim rests on how the marker is dated and correlated.
+test_suggestions:
+  eruption-age:
+  - method: tephrochronology
+    why: Fingerprinting the glass shards ties the layer to one eruption.
+  - method: cosmogenic-nuclide
+    why: An independent surface-exposure age brackets the marker.
+evidence_families:
+- name: tephrochronology
+  independence_class: method
+  why: Glass chemistry is independent of the radiometric clock.
+- name: stratigraphy
+  why: The layer's position is independent of its chemistry.
+grounding:
+  formats:
+  - pdf
+  - docx
+  notes:
+  - Quote the glass chemistry table and the dated horizon on the same page when possible.

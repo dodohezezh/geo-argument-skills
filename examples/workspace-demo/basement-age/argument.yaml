@@ -1,0 +1,52 @@
+schema_version: geoarg/0.6
+id: basement-age
+title: 'Basement age: a U-Pb zircon date on the gneiss'
+domain: plate-tectonics
+profile:
+  primary: geochronology
+  rationale: The claim rests on a radiometric date from the basement itself.
+claim:
+  id: C1
+  statement: The basement gneiss below the cover is older than 2.6 Ga.
+  kind: timing
+  layer: L1
+  scope: one sampled outcrop plus regional mapping
+premises:
+- id: P1
+  statement: A concordant U-Pb zircon age of 2.72 Ga was measured in the basement gneiss.
+  kind: evidenced
+  layer: L1
+  status: supported
+  evidence_refs:
+  - ev.zircon.age
+inference:
+  rule_id: W.radiometric-basement
+  warrant: A concordant radiometric age measured in the basement rock bounds the age of
+    that rock where the dated grains formed with it.
+  cp:
+  - id: CP1
+    statement: The dated zircons grew in the gneiss and were not inherited from an older
+      protolith.
+    cp_type: methodological
+    state: unknown
+    test_ref: T1
+  defeaters:
+  - id: D1
+    type: rebutting
+    statement: The dated zircons are inherited from a younger intrusive event.
+    severity: fatal
+    state: unknown
+    test_ref: T1
+entailments:
+- id: E1
+  statement: No basement sample yields an age younger than 2.6 Ga.
+  kind: temporal-pattern
+  risk: medium
+  status: untested
+  test_ref: T1
+gaps: []
+audit:
+  author: geoarg workspace demo
+  created: '2026-11-01'
+  updated: '2026-11-01'
+  version: '1.0'

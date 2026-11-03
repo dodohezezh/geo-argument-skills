@@ -1,3 +1,4 @@
+# Convenience copy; canonical dependencies live in pyproject.toml.
 PyYAML>=6.0
 pypdf>=6.0
 python-docx>=1.1

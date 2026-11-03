@@ -1,0 +1,16 @@
+schema_version: geoarg/0.6
+records:
+- id: T1
+  name: Fingerprint the glass shards and check for reworking
+  checks:
+  - CP1
+  - D1
+  - E1
+  method:
+    type: tephrochronology
+    description: Compare the shard major-element fingerprint with the regional tephra database.
+  blind:
+    is_blind: true
+  discriminating_power: high
+  status: planned
+  cost: 2

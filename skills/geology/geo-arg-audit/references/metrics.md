@@ -33,17 +33,17 @@ Expected information gain about the hypothesis, in bits. Use it when you can sta
 
     decisive = argmax_over_T  D(T) / cost(T)
 
-An expensive test that barely discriminates loses to a cheap test that separates the hypotheses. The `hit-set` command lists the single outcomes that would retract the claim; rank them by power, then by cost, and name the best one.
+An expensive test that barely discriminates loses to a cheap test that separates the hypotheses. The formula is the ideal ranking; the engine implements the simple version: `hit-set` reports each event's `cost` and sorts by power, then by cost. Name the best single test from that order.
 
 ## Minimal satisfying sets
 
-When several conditions must hold together, the set of outcomes that defeats the claim is a minimal hitting set over the contract's defeat paths. Version 0.1 enumerates single-event paths only. For combinations of degrading defeaters, state the combination explicitly in the report rather than assuming the engine found it.
+When several conditions must hold together, the set of outcomes that defeats the claim is a minimal hitting set over the contract's defeat paths. The engine enumerates single-event paths only. For combinations of degrading defeaters, state the combination explicitly in the report rather than assuming the engine found it.
 
 ## Grounding acceptance rate
 
     acceptance_rate = grounded / drafted
 
-`drafted` counts evidence records that declare a `source_locator`; `grounded` counts the quotes found on the declared page. `page-mismatch` is a citation error (the quote exists on another page); `not-found` is a fabricated draft. Report the rate next to `n_eff`: an argument can rest on one independent line and on zero grounded quotes at the same time. The gate has the shape of speculative decoding (draft, verify, accept), but the verifier is a string match against the source, not a judge of meaning.
+`drafted` counts evidence records that declare a `source_locator`; `grounded` counts the quotes found on the declared page. `page-mismatch` is a citation error (the quote exists on another page); `not-found` is a fabricated draft. Report the rate next to `n_eff`: an argument can rest on one independent line and on zero grounded quotes at the same time. `geoarg ground` exits non-zero when any declared quote is not grounded, and `--allow-partial` exists only to inspect a partial ledger. The gate has the shape of speculative decoding (draft, verify, accept), but the verifier is a string match against the source, not a judge of meaning.
 
 ## Reporting units
 

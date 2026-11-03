@@ -21,14 +21,27 @@ def _power_of(case: Case, test_ref: Any) -> str | None:
     return best
 
 
+def _cost_of(case: Case, test_ref: Any) -> float | None:
+    """Cheapest declared cost among the tests that carry this outcome."""
+    refs = test_ref if isinstance(test_ref, list) else [test_ref]
+    costs = [
+        case.tests_by_id[ref].get("cost")
+        for ref in refs
+        if isinstance(ref, str) and ref in case.tests_by_id
+    ]
+    numeric = [float(c) for c in costs if isinstance(c, (int, float)) and not isinstance(c, bool)]
+    return min(numeric) if numeric else None
+
+
 def decisive_events(case: Case) -> dict[str, Any]:
     """Flip each unknown item and keep the flips that defeat the claim.
 
-    v0.1 enumerates single-event defeat paths only: one established fatal
+    Only single-event defeat paths are enumerated: one established fatal
     defeater, one failed high-risk entailment, or one failed ceteris paribus
     condition. Combinations of degrading defeaters can also retract an
     argument; those are reported as a limitation rather than silently
-    enumerated.
+    enumerated. Events are ranked by discriminating power, then by declared
+    cost, so a cheap decisive test is not hidden behind an expensive one.
     """
     base = judge(case)
     candidates: list[tuple[str, str, str, str, Any]] = []
@@ -66,14 +79,23 @@ def decisive_events(case: Case) -> dict[str, Any]:
                     "label": label,
                     "test": test_ref,
                     "power": _power_of(case, test_ref),
+                    "cost": _cost_of(case, test_ref),
                     "resulting_verdict": trial["verdict"],
                 }
             )
 
-    events.sort(key=lambda e: (-_POWER_ORDER.get(e["power"], -1), e["label"]))
+    events.sort(key=lambda e: (-_POWER_ORDER.get(e["power"], -1), e["cost"] if e["cost"] is not None else float("inf"), e["label"]))
 
     return {
         "base_verdict": base["verdict"],
         "events": events,
-        "note": "single-event defeat paths only; combinations of degrading defeaters are not enumerated in v0.1",
+        "note": (
+            "single-event defeat paths only; combinations of degrading defeaters are not enumerated. "
+            "cost is the cheapest declared test cost, in the same unit as test.yaml"
+        ),
     }
+
+
+def changing_events(events: list[dict], base_verdict: str) -> list[dict]:
+    """Keep only the outcomes that would move the conclusion away from where it is."""
+    return [event for event in events if event.get("resulting_verdict") != base_verdict]

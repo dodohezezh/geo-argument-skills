@@ -2,7 +2,9 @@
 
 One document model feeds two renderers (Markdown and Word) and two report
 languages (English and Simplified Chinese). Contract content is rendered as
-written; only the report frame is translated.
+written; only the frame is translated. The wording is ordinary language plus
+the author's own statements: the reader layer does not use engine-internal
+role names.
 """
 
 from __future__ import annotations
@@ -10,12 +12,13 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from .audit import case_digest
-from .contract import Case
-from .ground import GroundError, load_ledger, validate_grounding
-from .hitting import decisive_events
+from . import terms
+from .audit import case_digest, engine_digest
+from .contract import SCHEMA_VERSION, Case
+from .ground import GROUND_SCHEMA_VERSION, GroundError, ledger_sha256, load_ledger, validate_grounding
+from .hitting import changing_events, decisive_events
 from .independence import report as independence_report
-from .judge import judge
+from .judge import RULE_VERSION, judge
 
 # A block is one of:
 #   ("p", text)
@@ -29,22 +32,26 @@ LABELS: dict[str, dict[str, str]] = {
         "title": "GeoArg report: {title}",
         "claim": "claim",
         "statement": "statement",
-        "verdict": "verdict",
+        "verdict": "conclusion",
         "rule_version": "rule version",
-        "flags": "flags",
-        "why": "Why this verdict",
+        "field": "declared field",
+        "judgement": "Commentary",
+        "judgement_authored": "commentary: written by the model; sha256: {digest}",
+        "judgement_absent": "commentary: not provided",
+        "derived_premise": "concluded in another argument (not expanded here)",
+        "why": "Why this conclusion",
         "premises": "Premises",
-        "cps": "Ceteris paribus conditions",
-        "defeaters": "Defeaters",
-        "entailments": "Entailments",
-        "independence": "Independence",
-        "grounding": "Grounding",
-        "decisive": "Decisive tests",
-        "gaps": "Registered gaps",
-        "audit": "Audit",
-        "hard": "hard defeat",
-        "soft": "suspension",
-        "pending": "unresolved",
+        "cps": "Conditions that must hold",
+        "defeaters": "Counter-evidence",
+        "entailments": "Predictions that must hold",
+        "independence": "Are the evidence lines independent?",
+        "grounding": "Do the quotes match the source?",
+        "decisive": "What would change the conclusion",
+        "gaps": "What this argument cannot express",
+        "audit": "Audit trail",
+        "hard": "fatal issues",
+        "soft": "weakening evidence",
+        "pending": "still without a result",
         "none": "none",
         "id": "id",
         "state": "state",
@@ -52,90 +59,104 @@ LABELS: dict[str, dict[str, str]] = {
         "severity": "severity",
         "status": "status",
         "risk": "risk",
-        "evidence": "evidence",
+        "evidence": "record",
         "declared_page": "declared page",
-        "found_page": "found page",
-        "outcome": "outcome",
+        "found_page": "page found",
+        "outcome": "if this happens",
         "power": "power",
-        "result": "result",
-        "kind": "kind",
+        "cost": "cost",
+        "result": "conclusion becomes",
+        "kind": "type",
         "description": "description",
-        "n_eff": "effective independent evidence: n_eff = {n_eff} out of {total} records (mean rho = {rho})",
-        "families": "families: {families}",
-        "warning": "warning: {warning}",
-        "unattached": "declared but unattached calibration: {items}",
-        "no_ledger": "No grounding ledger. Transcription-level evidence is unverified.",
+        "n_eff": "independent evidence: about {n_eff} lines out of {total} records (mean correlation {rho})",
+        "families": "fields of evidence: {families}",
+        "warning": "independence note: {warning}",
+        "unattached": "calibration declared but not attached: {items}",
+        "no_ledger": "No quote-check record. Transcriptions are unverified.",
         "source": "Source: {path} ({pages} pages, {chars} chars, text layer: {layer}).",
-        "acceptance": "Acceptance rate: {rate} ({grounded}/{drafted} drafted quotes grounded).",
+        "acceptance": "Quotes that match the source: {rate} ({grounded}/{drafted} drafted quotes checked).",
         "problem": "Problem: {text}",
         "warning_row": "Warning: {text}",
         "na": "n/a",
-        "decisive_intro": "Base verdict is {verdict}. These single outcomes would retract the claim now:",
-        "decisive_none": "None found. The claim is already defeated, or the contract has no live unknown items.",
+        "decisive_intro": "Current conclusion: {verdict}. Each row is one single outcome that would change it:",
+        "decisive_none": "None found. The claim is already decided, or the argument has no open item.",
+        "decisive_none_defeated": "The conclusion is already refuted. It can recover only if the counter-evidence above is withdrawn or itself refuted; no other single outcome changes it.",
+        "decisive_none_suspended": "The conclusion is already weakened. It recovers only if the counter-evidence above is answered or withdrawn; no other single outcome changes it.",
+        "decisive_note": "Single outcomes only; combinations of weakening counter-evidence are not listed. cost is the cheapest declared test cost, in the same unit as test.yaml.",
         "brief_title": "GeoArg brief: {title}",
-        "brief_line": "Verdict {verdict}: {hard} hard defeat(s), {soft} suspension(s), {pending} open item(s). Grounding acceptance {rate}. Effective independent evidence {n_eff} of {total}.",
+        "brief_line": "Conclusion {verdict}: {hard} fatal, {soft} weakening, {pending} still without a result. Quotes matching the source {rate}. Independent evidence about {n_eff} of {total}.",
         "brief_summary": "Essentials",
-        "brief_more": "{more} more decisive events in the full report.",
-        "brief_only": "This brief lists the essentials. Run with --full for the complete contract report.",
-        "brief_warnings": "independence warnings: {count}",
-        "gaps_line": "registered gaps: {count} (blocking: {blocking})",
-        "no_ledger_short": "no grounding ledger (transcription evidence unverified)",
+        "brief_more": "{more} more in the full report.",
+        "brief_only": "This brief lists the essentials. Run `geoarg report <case>` for the full report.",
+        "excluded": "left out of the independence count: {id} ({status})",
+        "brief_warnings": "independence notes: {count}",
+        "gaps_line": "recorded gaps: {count} (blocking: {blocking})",
+        "no_ledger_short": "no quote-check record (transcriptions unverified)",
     },
     "zh": {
         "title": "GeoArg 报告：{title}",
         "claim": "主张",
         "statement": "陈述",
-        "verdict": "判决",
+        "verdict": "结论",
         "rule_version": "规则版本",
-        "flags": "标记",
-        "why": "判决理由",
+        "field": "作者声明的领域",
+        "judgement": "评述",
+        "judgement_authored": "评述：由模型撰写；sha256：{digest}",
+        "judgement_absent": "评述：未提供",
+        "derived_premise": "结论来自另一条论证（本论证未展开）",
+        "why": "为什么是这个结论",
         "premises": "前提",
-        "cps": "其他条件不变条件",
-        "defeaters": "判废条件",
-        "entailments": "可检验蕴含",
-        "independence": "独立性",
-        "grounding": "接地",
-        "decisive": "决定性检验",
-        "gaps": "已登记缺口",
-        "audit": "审计",
-        "hard": "硬判决",
-        "soft": "中止",
-        "pending": "未决",
+        "cps": "必须成立的条件",
+        "defeaters": "反面证据",
+        "entailments": "必须成立的推论",
+        "independence": "证据之间有多独立",
+        "grounding": "引文与原文是否一致",
+        "decisive": "哪些结果会改变结论",
+        "gaps": "这套论证没能表达的问题",
+        "audit": "审计信息",
+        "hard": "足以推翻的问题",
+        "soft": "削弱支持的问题",
+        "pending": "还没有结果的问题",
         "none": "无",
         "id": "编号",
         "state": "状态",
         "test": "检验",
-        "severity": "严重度",
+        "severity": "严重程度",
         "status": "状态",
         "risk": "风险",
-        "evidence": "证据",
+        "evidence": "记录",
         "declared_page": "声明页码",
-        "found_page": "命中页码",
-        "outcome": "结果",
-        "power": "判别力",
-        "result": "判决结果",
-        "kind": "种类",
-        "description": "描述",
-        "n_eff": "有效独立证据：n_eff = {n_eff} / {total} 条记录（平均 rho = {rho}）",
-        "families": "证据族：{families}",
-        "warning": "警戒：{warning}",
-        "unattached": "声明但未附着的校准：{items}",
-        "no_ledger": "无接地台账。转录级证据未经验证。",
+        "found_page": "实际页码",
+        "outcome": "如果发生什么",
+        "power": "区分力",
+        "cost": "成本",
+        "result": "结论会变成",
+        "kind": "类型",
+        "description": "说明",
+        "n_eff": "独立证据：约 {n_eff} 条 / {total} 条记录（平均相关 {rho}）",
+        "families": "证据领域：{families}",
+        "warning": "独立性提示：{warning}",
+        "unattached": "声明了但未附着的校准：{items}",
+        "no_ledger": "没有引文核对记录，转录内容未经验证。",
         "source": "来源：{path}（{pages} 页，{chars} 字符，文本层：{layer}）。",
-        "acceptance": "验收率：{rate}（{grounded}/{drafted} 条草拟引文已接地）。",
+        "acceptance": "引文与原文一致的比例：{rate}（{grounded}/{drafted} 条草拟引文已核对）。",
         "problem": "问题：{text}",
-        "warning_row": "警戒：{text}",
+        "warning_row": "提示：{text}",
         "na": "不适用",
-        "decisive_intro": "基础判决为 {verdict}。以下单事件结果会立即撤回该主张：",
-        "decisive_none": "未找到。主张已被判决，或契约没有活的未知项。",
+        "decisive_intro": "当前结论：{verdict}。下面每一行都是一种单独就会改变结论的情况：",
+        "decisive_none": "没有找到。主张已经有结论，或者这份论证没有未决项。",
+        "decisive_none_defeated": "结论已经「已被推翻」。上面列出的反面证据必须被撤回或被推翻，主张才可能恢复；没有其他单事件会改变它。",
+        "decisive_none_suspended": "结论已经「证据被削弱」。上面列出的反面证据必须被回应或撤回，支持才可能恢复；没有其他单事件会改变它。",
+        "decisive_note": "只列单事件结果；多条削弱性反面证据同时成立的情形没有列出。成本取作者声明的最低检验成本，单位同 test.yaml。",
         "brief_title": "GeoArg 简报：{title}",
-        "brief_line": "判决 {verdict}：硬判废 {hard} 条，中止 {soft} 条，未决 {pending} 项。接地验收率 {rate}。有效独立证据 {n_eff} / {total} 条。",
+        "brief_line": "结论 {verdict}：{hard} 条足以推翻，{soft} 条削弱支持，{pending} 项还没有结果。引文与原文一致的比例 {rate}。独立证据约 {n_eff} / {total} 条。",
         "brief_summary": "要点",
-        "brief_more": "另有 {more} 条决定性事件见完整报告。",
-        "brief_only": "本简报只列要点。完整契约报告用 --full。",
-        "brief_warnings": "独立性警戒：{count} 条",
-        "gaps_line": "登记缺口：{count} 条（blocking：{blocking}）",
-        "no_ledger_short": "无接地台账（转录级证据未经验证）",
+        "brief_more": "另有 {more} 条见完整报告。",
+        "brief_only": "本简报只列要点。完整报告运行 `geoarg report <case>`。",
+        "excluded": "未计入独立性：{id}（{status}）",
+        "brief_warnings": "独立性提示：{count} 条",
+        "gaps_line": "记录的问题：{count} 条（阻塞：{blocking}）",
+        "no_ledger_short": "没有引文核对记录（转录内容未经验证）",
     },
 }
 
@@ -148,7 +169,79 @@ def _table(header: list[str], rows: list[list[str]]) -> Block:
     return ("table", (header, rows))
 
 
-def build(case: Case, lang: str = "en") -> dict:
+def _fmt(value: Any) -> str:
+    """Render empty cells as a dash instead of Python's None or list repr."""
+    if value is None:
+        return "-"
+    if isinstance(value, (list, tuple)):
+        return ", ".join(_fmt(item) for item in value) if value else "-"
+    text = str(value)
+    return text if text else "-"
+
+
+def _fmt_number(value: Any) -> str:
+    if isinstance(value, float) and value.is_integer():
+        return str(int(value))
+    return _fmt(value)
+
+
+def _judgement_blocks(judgment: str | None) -> list[Block]:
+    normalized = terms.normalize_judgment(judgment)
+    return [("p", paragraph) for paragraph in normalized.split("\n\n")] if normalized else []
+
+
+def _audit_lines(case: Case, ledger: dict | None, labels: dict[str, str], lang: str, judgment: str | None) -> list[str]:
+    zh = lang == "zh"
+    lines = [
+        (f"输入文件 {name}：{digest}" if zh else f"input {name}: {digest}")
+        for name, digest in case_digest(case.root).items()
+    ]
+    lines.append((f"核对程序版本：{engine_digest()}" if zh else f"checker version: {engine_digest()}"))
+    lines.append(
+        (f"引文核对记录：{ledger_sha256(case.root) or labels['na']}" if zh else f"quote-check record: {ledger_sha256(case.root) or labels['na']}")
+    )
+    lines.append((f"论证文件格式：{SCHEMA_VERSION}" if zh else f"argument format: {SCHEMA_VERSION}"))
+    lines.append((f"规则版本：{RULE_VERSION}" if zh else f"rule version: {RULE_VERSION}"))
+    lines.append((f"引文核对格式版本：{GROUND_SCHEMA_VERSION}" if zh else f"quote-check format: {GROUND_SCHEMA_VERSION}"))
+    lines.append(
+        f"{labels['field']}：{terms.profile_label(case, lang)}"
+        if zh
+        else f"{labels['field']}: {terms.profile_label(case, lang)}"
+    )
+    if terms.normalize_judgment(judgment):
+        lines.append(labels["judgement_authored"].format(digest=terms.judgment_digest(judgment)))
+    else:
+        lines.append(labels["judgement_absent"])
+    return lines
+
+
+def _grounding_problem(text: str, lang: str) -> str:
+    if lang != "zh":
+        return text
+    if text.startswith("pdf missing"):
+        return "PDF 找不到：" + text.split(":", 1)[1].strip() if ":" in text else "PDF 找不到"
+    return terms.grounding_problem_text(text, lang)
+
+
+def _decisive_table(
+    labels: dict[str, str], case: Case, events: list[dict], lang: str
+) -> Block:
+    return _table(
+        [labels["outcome"], labels["test"], labels["power"], labels["cost"], labels["result"]],
+        [
+            [
+                terms.event_sentence(case, event, lang),
+                _fmt(event["test"]),
+                terms.power_label(event["power"], lang),
+                _fmt_number(event["cost"]),
+                terms.status_label(event.get("resulting_verdict"), lang),
+            ]
+            for event in events
+        ],
+    )
+
+
+def build(case: Case, lang: str = "en", judgment: str | None = None) -> dict:
     """Build the document model shared by the Markdown and Word renderers."""
     L = _labels(lang)
     result = judge(case)
@@ -159,33 +252,69 @@ def build(case: Case, lang: str = "en") -> dict:
     meta: list[tuple[str, str]] = [
         (L["claim"], f"{claim.get('id')} ({claim.get('kind')}, {claim.get('layer')})"),
         (L["statement"], str(claim.get("statement", ""))),
-        (L["verdict"], result["verdict"]),
+        (L["field"], terms.profile_label(case, lang)),
+        (L["verdict"], terms.status_label(result["verdict"], lang)),
         (L["rule_version"], result["rule_version"]),
     ]
-    if result["flags"]:
-        meta.append((L["flags"], "; ".join(result["flags"])))
 
     sections: list[dict] = []
+    if _judgement_blocks(judgment):
+        sections.append({"heading": L["judgement"], "blocks": _judgement_blocks(judgment)})
 
-    why: list[str] = []
-    for key, title in (("hard", L["hard"]), ("soft", L["soft"]), ("pending", L["pending"])):
-        reasons = result["reasons"][key]
-        if reasons:
-            why.extend(f"{title}: {reason}" for reason in reasons)
-        else:
-            why.append(f"{title}: {L['none']}")
-    sections.append({"heading": L["why"], "blocks": [("bullets", why)]})
+    why: list[Block] = [("p", terms.status_explanation(result["verdict"], lang))]
+    items = result.get("reason_items") or []
+    if items:
+        for bucket in ("hard", "soft", "pending"):
+            bucket_items = [item for item in items if item.get("bucket") == bucket]
+            why.append(("p", f"{terms.bucket_label(bucket, lang)}:"))
+            why.append(
+                (
+                    "bullets",
+                    [terms.item_sentence(case, item, lang) for item in bucket_items] or [L["none"]],
+                )
+            )
+    else:
+        for bucket in ("hard", "soft", "pending"):
+            reasons = result["reasons"][bucket]
+            why.append(("p", f"{terms.bucket_label(bucket, lang)}:"))
+            why.append(("bullets", list(reasons) or [L["none"]]))
+    sections.append({"heading": L["why"], "blocks": why})
 
     sections.append(
         {
             "heading": L["premises"],
-            "blocks": [_table([L["id"], L["state"], L["statement"]], [[p["id"], p["status"], p["statement"]] for p in result["premises"]])],
+            "blocks": [
+                _table(
+                    [L["id"], L["status"], L["description"]],
+                    [
+                        [
+                            p["id"],
+                            terms.chain_premise_label(p, lang),
+                            p["statement"],
+                        ]
+                        for p in result["premises"]
+                    ],
+                )
+            ],
         }
     )
     sections.append(
         {
             "heading": L["cps"],
-            "blocks": [_table([L["id"], L["state"], L["test"]], [[c["id"], c["state"], c["test"]] for c in result["cps"]])],
+            "blocks": [
+                _table(
+                    [L["id"], L["state"], L["test"], L["description"]],
+                    [
+                        [
+                            _fmt(c["id"]),
+                            terms.condition_state_label("cp", c["state"], lang),
+                            _fmt(c["test"]),
+                            terms.statement_of(case, "cp", c["id"]),
+                        ]
+                        for c in result["cps"]
+                    ],
+                )
+            ],
         }
     )
     sections.append(
@@ -193,8 +322,17 @@ def build(case: Case, lang: str = "en") -> dict:
             "heading": L["defeaters"],
             "blocks": [
                 _table(
-                    [L["id"], L["state"], L["severity"], L["test"]],
-                    [[d["id"], d["state"], d["severity"], d["test"]] for d in result["defeaters"]],
+                    [L["id"], L["state"], L["severity"], L["test"], L["description"]],
+                    [
+                        [
+                            _fmt(d["id"]),
+                            terms.condition_state_label("defeater", d["state"], lang),
+                            terms.severity_label(d["severity"], lang),
+                            _fmt(d["test"]),
+                            terms.statement_of(case, "defeater", d["id"]),
+                        ]
+                        for d in result["defeaters"]
+                    ],
                 )
             ],
         }
@@ -204,8 +342,17 @@ def build(case: Case, lang: str = "en") -> dict:
             "heading": L["entailments"],
             "blocks": [
                 _table(
-                    [L["id"], L["status"], L["risk"], L["test"]],
-                    [[e["id"], e["status"], e["risk"], e["test"]] for e in result["entailments"]],
+                    [L["id"], L["status"], L["risk"], L["test"], L["description"]],
+                    [
+                        [
+                            _fmt(e["id"]),
+                            terms.condition_state_label("entailment", e["status"], lang),
+                            terms.risk_label(e["risk"], lang),
+                            _fmt(e["test"]),
+                            terms.statement_of(case, "entailment", e["id"]),
+                        ]
+                        for e in result["entailments"]
+                    ],
                 )
             ],
         }
@@ -216,8 +363,12 @@ def build(case: Case, lang: str = "en") -> dict:
         L["families"].format(families=", ".join(indep["families"]) or L["none"]),
     ]
     indep_lines.extend(L["warning"].format(warning=warning) for warning in indep["warnings"])
+    for excluded in indep["excluded_records"]:
+        indep_lines.append(L["excluded"].format(id=excluded["id"], status=excluded["status"]))
     if indep["declared_calibration_not_attached"]:
-        indep_lines.append(L["unattached"].format(items=indep["declared_calibration_not_attached"]))
+        indep_lines.append(
+            L["unattached"].format(items=", ".join(indep["declared_calibration_not_attached"]))
+        )
     sections.append({"heading": L["independence"], "blocks": [("bullets", indep_lines)]})
 
     grounding_blocks: list[Block] = []
@@ -226,20 +377,22 @@ def build(case: Case, lang: str = "en") -> dict:
         grounding_problems, grounding_warnings = validate_grounding(case, ledger)
     except GroundError as exc:
         ledger = None
-        grounding_problems = [f"grounding ledger unreadable: {exc}"]
+        grounding_problems = [f"quote-check record unreadable: {exc}"]
         grounding_warnings = []
     if ledger is None:
         grounding_blocks.append(("p", L["no_ledger"]))
     else:
         pdf = ledger["pdf"]
         extracted = ledger["extracted"]
-        text_layer = "yes" if extracted["text_layer"] else "no"
         rate = ledger["acceptance_rate"]
         grounding_blocks.append(
             (
                 "p",
                 L["source"].format(
-                    path=pdf["path"], pages=extracted["pages"], chars=extracted["chars"], layer=text_layer
+                    path=pdf["path"],
+                    pages=extracted["pages"],
+                    chars=extracted["chars"],
+                    layer="yes" if extracted["text_layer"] else "no",
                 ),
             )
         )
@@ -254,28 +407,37 @@ def build(case: Case, lang: str = "en") -> dict:
             )
         )
         rows = [
-            [rid, entry["status"], entry.get("page", ""), entry.get("found_page", "")]
+            [
+                rid,
+                terms.ground_status_label(entry.get("status"), lang),
+                _fmt(entry.get("page")),
+                _fmt(entry.get("found_page")),
+            ]
             for rid, entry in ledger["records"].items()
         ]
         if rows:
-            grounding_blocks.append(_table([L["evidence"], L["status"], L["declared_page"], L["found_page"]], rows))
+            grounding_blocks.append(
+                _table([L["evidence"], L["status"], L["declared_page"], L["found_page"]], rows)
+            )
     for problem in grounding_problems:
-        grounding_blocks.append(("p", L["problem"].format(text=problem)))
+        grounding_blocks.append(("p", L["problem"].format(text=_grounding_problem(problem, lang))))
     for warning in grounding_warnings:
-        grounding_blocks.append(("p", L["warning_row"].format(text=warning)))
+        grounding_blocks.append(("p", L["warning_row"].format(text=_grounding_problem(warning, lang))))
     sections.append({"heading": L["grounding"], "blocks": grounding_blocks})
 
-    decisive_blocks: list[Block] = [("p", L["decisive_intro"].format(verdict=decisive["base_verdict"]))]
-    if decisive["events"]:
-        decisive_blocks.append(
-            _table(
-                [L["outcome"], L["test"], L["power"], L["result"]],
-                [[e["label"], e["test"], e["power"], e["resulting_verdict"]] for e in decisive["events"]],
-            )
-        )
+    decisive_blocks: list[Block] = [
+        ("p", L["decisive_intro"].format(verdict=terms.status_label(decisive["base_verdict"], lang)))
+    ]
+    changing = changing_events(decisive["events"], decisive["base_verdict"])
+    if changing:
+        decisive_blocks.append(_decisive_table(L, case, changing, lang))
+    elif decisive["base_verdict"] == "DEFEATED":
+        decisive_blocks.append(("p", L["decisive_none_defeated"]))
+    elif decisive["base_verdict"] == "SUSPENDED":
+        decisive_blocks.append(("p", L["decisive_none_suspended"]))
     else:
         decisive_blocks.append(("p", L["decisive_none"]))
-    decisive_blocks.append(("note", decisive["note"]))
+    decisive_blocks.append(("note", L["decisive_note"]))
     sections.append({"heading": L["decisive"], "blocks": decisive_blocks})
 
     gaps = case.argument.get("gaps", [])
@@ -286,14 +448,25 @@ def build(case: Case, lang: str = "en") -> dict:
                 "blocks": [
                     _table(
                         [L["kind"], L["severity"], L["description"]],
-                        [[g.get("kind"), g.get("severity"), g.get("description")] for g in gaps],
+                        [
+                            [
+                                terms.gap_kind_label(g.get("kind"), lang),
+                                terms.gap_severity_label(g.get("severity"), lang),
+                                g.get("description"),
+                            ]
+                            for g in gaps
+                        ],
                     )
                 ],
             }
         )
 
-    audit_lines = [f"{name}: {digest}" for name, digest in case_digest(case.root).items()]
-    sections.append({"heading": L["audit"], "blocks": [("bullets", audit_lines)]})
+    sections.append(
+        {
+            "heading": L["audit"],
+            "blocks": [("bullets", _audit_lines(case, ledger, L, lang, judgment))],
+        }
+    )
 
     return {
         "title": L["title"].format(title=case.argument.get("title", "untitled")),
@@ -302,8 +475,8 @@ def build(case: Case, lang: str = "en") -> dict:
     }
 
 
-def build_brief(case: Case, lang: str = "en") -> dict:
-    """Build the one-page brief: verdict, key numbers, top decisive tests."""
+def build_brief(case: Case, lang: str = "en", judgment: str | None = None) -> dict:
+    """Build the one-page brief: conclusion, key numbers, top decisive tests."""
     L = _labels(lang)
     result = judge(case)
     indep = independence_report(case)
@@ -313,6 +486,7 @@ def build_brief(case: Case, lang: str = "en") -> dict:
     meta: list[tuple[str, str]] = [
         (L["claim"], f"{claim.get('id')} ({claim.get('kind')}, {claim.get('layer')})"),
         (L["statement"], str(claim.get("statement", ""))),
+        (L["field"], terms.profile_label(case, lang)),
     ]
 
     hard = result["reasons"]["hard"]
@@ -331,7 +505,7 @@ def build_brief(case: Case, lang: str = "en") -> dict:
 
     lines: list[str] = [
         L["brief_line"].format(
-            verdict=result["verdict"],
+            verdict=terms.status_label(result["verdict"], lang),
             hard=len(hard),
             soft=len(soft),
             pending=len(pending),
@@ -340,11 +514,13 @@ def build_brief(case: Case, lang: str = "en") -> dict:
             total=indep["n_records"],
         )
     ]
-    for title, items in ((L["hard"], hard), (L["soft"], soft), (L["pending"], pending)):
-        if items:
-            lines.append(f"{title}: {', '.join(items)}")
-    if result["flags"]:
-        lines.append(f"{L['flags']}: {'; '.join(result['flags'])}")
+    weak = [test for test in result["gating_tests"] if test.get("power") in (None, "none", "low")]
+    if weak:
+        lines.append(
+            (f"判别力不足的检验：{', '.join(_fmt(test.get('id')) for test in weak)}"
+             if lang == "zh"
+             else f"tests with little power to distinguish: {', '.join(_fmt(test.get('id')) for test in weak)}")
+        )
     if ledger is None:
         lines.append(L["no_ledger_short"])
     if indep["warnings"]:
@@ -355,30 +531,43 @@ def build_brief(case: Case, lang: str = "en") -> dict:
         lines.append(L["gaps_line"].format(count=len(gaps), blocking=blocking))
 
     blocks: list[Block] = [("bullets", lines)]
-    events = decisive["events"]
-    top = events[:3]
+    changing = changing_events(decisive["events"], decisive["base_verdict"])
+    top = changing[:3]
     if top:
-        blocks.append(
-            _table(
-                [L["outcome"], L["test"], L["power"], L["result"]],
-                [[e["label"], e["test"], e["power"], e["resulting_verdict"]] for e in top],
-            )
-        )
-        if len(events) > len(top):
-            blocks.append(("note", L["brief_more"].format(more=len(events) - len(top))))
+        blocks.append(_decisive_table(L, case, top, lang))
+        if len(changing) > len(top):
+            blocks.append(("note", L["brief_more"].format(more=len(changing) - len(top))))
+    elif decisive["base_verdict"] == "DEFEATED":
+        blocks.append(("p", L["decisive_none_defeated"]))
+    elif decisive["base_verdict"] == "SUSPENDED":
+        blocks.append(("p", L["decisive_none_suspended"]))
     else:
         blocks.append(("p", L["decisive_none"]))
     blocks.append(("note", L["brief_only"]))
+
+    sections = []
+    if _judgement_blocks(judgment):
+        judgement_blocks: list[Block] = list(_judgement_blocks(judgment))
+        judgement_blocks.append(
+            ("note", L["judgement_authored"].format(digest=terms.judgment_digest(judgment)))
+        )
+        sections.append({"heading": L["judgement"], "blocks": judgement_blocks})
+    sections.append({"heading": L["brief_summary"], "blocks": blocks})
     return {
         "title": L["brief_title"].format(title=case.argument.get("title", "untitled")),
         "meta": meta,
-        "sections": [{"heading": L["brief_summary"], "blocks": blocks}],
+        "sections": sections,
     }
 
 
-def render(case: Case, lang: str = "en", brief: bool = False) -> str:
+def render(
+    case: Case,
+    lang: str = "en",
+    brief: bool = False,
+    judgment: str | None = None,
+) -> str:
     """Render the document model as Markdown."""
-    model = build_brief(case, lang) if brief else build(case, lang)
+    model = build_brief(case, lang, judgment) if brief else build(case, lang, judgment)
     out: list[str] = [f"# {model['title']}", ""]
     for label, value in model["meta"]:
         out.append(f"- {label}: {value}")
@@ -404,7 +593,13 @@ def render(case: Case, lang: str = "en", brief: bool = False) -> str:
     return "\n".join(out)
 
 
-def render_docx(case: Case, path: str | Path, lang: str = "en", brief: bool = False) -> Path:
+def render_docx(
+    case: Case,
+    path: str | Path,
+    lang: str = "en",
+    brief: bool = False,
+    judgment: str | None = None,
+) -> Path:
     """Render the document model as a Word document and return its path."""
     try:
         from docx import Document
@@ -413,7 +608,7 @@ def render_docx(case: Case, path: str | Path, lang: str = "en", brief: bool = Fa
     except ImportError as exc:  # pragma: no cover - dependency is declared
         raise RuntimeError("python-docx is required for Word reports: pip install python-docx") from exc
 
-    model = build_brief(case, lang) if brief else build(case, lang)
+    model = build_brief(case, lang, judgment) if brief else build(case, lang, judgment)
     document = Document()
     document.core_properties.title = model["title"]
     document.add_heading(model["title"], level=0)

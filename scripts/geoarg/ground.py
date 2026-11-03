@@ -1,10 +1,14 @@
-"""Ground transcribed evidence against a source PDF.
+"""Ground transcribed evidence against a source document.
 
 The gate has a speculative-decoding shape. A model drafts quotes cheaply; this
-module verifies every quote against the PDF text layer deterministically, and
-only a grounded quote may stay `accepted` at transcription level. The guarantee
-is deliberately narrow: a grounded quote means the string occurs in the source,
+module verifies every quote against the source text deterministically, and only
+a grounded quote may stay `accepted` at transcription level. The guarantee is
+deliberately narrow: a grounded quote means the string occurs in the source,
 not that the interpretation built on it is right.
+
+Supported source formats: PDF (`pypdf` text layer), DOCX (`python-docx`),
+HTML, Markdown, and plain text. Page numbers are only meaningful for PDF; a
+one-page source reports page 1.
 """
 
 from __future__ import annotations
@@ -13,12 +17,14 @@ import hashlib
 import json
 import re
 import unicodedata
+from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
 
 from .contract import Case
+from .safeio import atomic_write_text
 
-GROUND_SCHEMA_VERSION = "geoarg/ground/0.2"
+GROUND_SCHEMA_VERSION = "geoarg/ground/0.3"
 MIN_TEXT_CHARS = 20
 
 GROUNDED = "grounded"
@@ -56,16 +62,13 @@ def _pypdf():  # type: ignore[no-untyped-def]
     try:
         import pypdf
     except ImportError as exc:  # pragma: no cover - dependency error path
-        raise GroundError("pypdf is required for grounding: pip install pypdf") from exc
+        raise GroundError("pypdf is required for PDF grounding: pip install pypdf") from exc
     return pypdf
 
 
-def extract_pages(pdf_path: str | Path) -> tuple[list[str], dict[str, Any]]:
+def _extract_pdf(path: Path) -> tuple[list[str], dict[str, Any]]:
     """Return normalized text per page plus extraction metadata."""
     pypdf = _pypdf()
-    path = Path(pdf_path)
-    if not path.is_file():
-        raise GroundError(f"pdf not found: {path}")
     try:
         reader = pypdf.PdfReader(str(path))
         if getattr(reader, "is_encrypted", False):
@@ -93,6 +96,107 @@ def extract_pages(pdf_path: str | Path) -> tuple[list[str], dict[str, Any]]:
     return pages, metadata
 
 
+def _docx() -> Any:
+    try:
+        import docx
+    except ImportError as exc:  # pragma: no cover - dependency error path
+        raise GroundError("python-docx is required for DOCX grounding: pip install python-docx") from exc
+    return docx
+
+
+def _extract_docx(path: Path) -> tuple[list[str], dict[str, Any]]:
+    docx = _docx()
+    try:
+        document = docx.Document(str(path))
+    except Exception as exc:
+        raise GroundError(f"cannot read docx {path}: {exc}") from exc
+    parts = [paragraph.text for paragraph in document.paragraphs]
+    for table in document.tables:
+        for row in table.rows:
+            parts.append(" | ".join(cell.text for cell in row.cells))
+    page = normalize("\n".join(parts))
+    pages = [page] if page else []
+    metadata = {
+        "extractor": f"python-docx {getattr(docx, '__version__', 'unknown')} (page numbers follow the document, not Word layout)",
+        "pages": len(pages),
+        "chars": len(page),
+        "text_layer": bool(page),
+    }
+    return pages, metadata
+
+
+class _HtmlText(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.parts: list[str] = []
+
+    def handle_data(self, data: str) -> None:
+        if data.strip():
+            self.parts.append(data)
+
+
+def _read_source_text(path: Path) -> str:
+    try:
+        return path.read_text(encoding="utf-8", errors="replace")
+    except OSError as exc:
+        raise GroundError(f"cannot read source document {path}: {exc}") from exc
+
+
+def _single_page(path: Path, extractor: str) -> tuple[list[str], dict[str, Any]]:
+    page = normalize(_read_source_text(path))
+    pages = [page] if page else []
+    return pages, {
+        "extractor": extractor,
+        "pages": len(pages),
+        "chars": len(page),
+        "text_layer": bool(page),
+    }
+
+
+def _extract_html(path: Path) -> tuple[list[str], dict[str, Any]]:
+    parser = _HtmlText()
+    try:
+        parser.feed(_read_source_text(path))
+        parser.close()
+    except Exception as exc:
+        raise GroundError(f"cannot parse html {path}: {exc}") from exc
+    page = normalize(" ".join(parser.parts))
+    pages = [page] if page else []
+    return pages, {
+        "extractor": "html.parser (one page; page numbers are not meaningful)",
+        "pages": len(pages),
+        "chars": len(page),
+        "text_layer": bool(page),
+    }
+
+
+def extract_document(source_path: str | Path) -> tuple[list[str], dict[str, Any]]:
+    """Return normalized text per page plus extraction metadata for any source."""
+    path = Path(source_path)
+    if not path.is_file():
+        raise GroundError(f"source document not found: {path}")
+    suffix = path.suffix.lower()
+    if suffix == ".pdf":
+        return _extract_pdf(path)
+    if suffix in (".docx", ".docm"):
+        return _extract_docx(path)
+    if suffix in (".html", ".htm"):
+        return _extract_html(path)
+    if suffix in (".md", ".markdown", ".txt", ".text"):
+        return _single_page(path, f"text ({suffix or 'no suffix'})")
+    raise GroundError(
+        f"unsupported source format {suffix or '(none)'}: {path}; use PDF, DOCX, HTML, Markdown, or plain text"
+    )
+
+
+def extract_pages(pdf_path: str | Path) -> tuple[list[str], dict[str, Any]]:
+    """Backward-compatible PDF extraction facade."""
+    path = Path(pdf_path)
+    if not path.is_file():
+        raise GroundError(f"pdf not found: {path}")
+    return _extract_pdf(path)
+
+
 def _page_starts(pages: list[str]) -> list[int]:
     starts: list[int] = []
     offset = 0
@@ -110,12 +214,12 @@ def _page_of(starts: list[int], offset: int) -> int:
     return page
 
 
-def ground_records(case: Case, pdf_path: str | Path) -> dict[str, Any]:
-    """Check every declared quote against the PDF and return the ledger."""
-    pages, extracted = extract_pages(pdf_path)
+def ground_records(case: Case, source_path: str | Path) -> dict[str, Any]:
+    """Check every declared quote against the source document and return the ledger."""
+    pages, extracted = extract_document(source_path)
     document = " ".join(pages)
     starts = _page_starts(pages)
-    path = Path(pdf_path).resolve()
+    path = Path(source_path).resolve()
     counts = {status: 0 for status in _COUNTED}
     results: dict[str, dict[str, Any]] = {}
     drafted = 0
@@ -137,16 +241,13 @@ def ground_records(case: Case, pdf_path: str | Path) -> dict[str, Any]:
         else:
             normalized = normalize(quote)
             declared = page if isinstance(page, int) else 0
-            if 1 <= declared <= len(pages) and normalized in pages[declared - 1]:
-                status = GROUNDED
-                entry["found_page"] = declared
+            hit = document.find(normalized)
+            if hit < 0:
+                status = NOT_FOUND
             else:
-                hit = document.find(normalized)
-                if hit >= 0:
-                    status = PAGE_MISMATCH
-                    entry["found_page"] = _page_of(starts, hit)
-                else:
-                    status = NOT_FOUND
+                found = _page_of(starts, hit)
+                entry["found_page"] = found
+                status = GROUNDED if declared == found else PAGE_MISMATCH
         entry["status"] = status
         results[rid] = entry
         counts[status] += 1
@@ -158,15 +259,16 @@ def ground_records(case: Case, pdf_path: str | Path) -> dict[str, Any]:
         counts.setdefault(known, 0)
     try:
         relative = path.relative_to(Path(case.root).resolve())
-        pdf_entry = {"path": str(relative), "case_relative": True}
+        source_entry = {"path": str(relative), "case_relative": True}
     except ValueError:
-        pdf_entry = {"path": str(path), "case_relative": False}
-    pdf_entry["sha256"] = _sha256(Path(pdf_path).read_bytes())
+        source_entry = {"path": str(path), "case_relative": False}
+    source_entry["sha256"] = _sha256(path.read_bytes())
+    source_entry["format"] = path.suffix.lower().lstrip(".") or "unknown"
 
     return {
         "schema_version": GROUND_SCHEMA_VERSION,
         "claim_id": case.claim.get("id"),
-        "pdf": pdf_entry,
+        "pdf": source_entry,
         "extracted": extracted,
         "records": results,
         "counts": counts,
@@ -191,12 +293,11 @@ def ledger_file(case_root: str | Path) -> Path | None:
 
 def write_ledger(case: Case, ledger: dict[str, Any]) -> Path:
     out_dir = ledger_dir(case.root)
-    out_dir.mkdir(parents=True, exist_ok=True)
     safe = str(case.claim.get("id") or "case").replace("/", "_")
     path = out_dir / f"{safe}.json"
-    path.write_text(
+    atomic_write_text(
+        path,
         json.dumps(ledger, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
     )
     return path
 
@@ -227,6 +328,11 @@ def validate_grounding(case: Case, ledger: dict[str, Any] | None) -> tuple[list[
     problems: list[str] = []
     warnings: list[str] = []
     records = (ledger or {}).get("records", {})
+    if ledger is not None and ledger.get("schema_version") != GROUND_SCHEMA_VERSION:
+        problems.append(
+            f"grounding ledger schema is {ledger.get('schema_version')!r}, expected "
+            f"{GROUND_SCHEMA_VERSION}; re-run geoarg ground"
+        )
 
     for record in case.evidence.get("records", []):
         rid = record.get("id")
@@ -245,7 +351,7 @@ def validate_grounding(case: Case, ledger: dict[str, Any] | None) -> tuple[list[
             continue
         if ledger is None:
             problems.append(
-                f"evidence {rid}: accepted transcription-level quote is not grounded; run geoarg ground <case> --pdf <paper>"
+                f"evidence {rid}: accepted transcription-level quote is not grounded; run geoarg ground <case> --source <paper>"
             )
             continue
         entry = records.get(rid)
@@ -268,8 +374,10 @@ def validate_grounding(case: Case, ledger: dict[str, Any] | None) -> tuple[list[
             path = Path(case.root) / raw if pdf.get("case_relative") else Path(raw)
             if path.is_file():
                 if _sha256(path.read_bytes()) != pdf.get("sha256"):
-                    problems.append(f"pdf changed since grounding: {raw}; re-run geoarg ground")
+                    problems.append(f"source document changed since grounding: {raw}; re-run geoarg ground")
             else:
-                warnings.append(f"grounded pdf is missing at {raw}; the quote digest is checked, the pdf is not")
+                warnings.append(
+                    f"grounded source is missing at {raw}; the quote digest is checked, the source is not"
+                )
 
     return problems, warnings

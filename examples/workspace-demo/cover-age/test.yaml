@@ -1,0 +1,16 @@
+schema_version: geoarg/0.6
+records:
+- id: T1
+  name: Log the contact and check for fault rock
+  checks:
+  - CP1
+  - D1
+  - E1
+  method:
+    type: field-check
+    description: Log the contact at two sections and look for fault rock or truncation.
+  blind:
+    is_blind: false
+  discriminating_power: medium
+  status: planned
+  cost: 2

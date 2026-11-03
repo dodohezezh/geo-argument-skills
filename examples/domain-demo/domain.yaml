@@ -1,0 +1,14 @@
+schema_version: geoarg/domain/0.1
+name: quaternary
+title: Quaternary geochronology and tephrochronology
+description: >-
+  Demonstrates that a case can widen the built-in enums without changing the
+  engine: a Quaternary age model and a tephrochronology test are added by a
+  domain pack that lives beside the case.
+enums:
+  domains:
+  - quaternary-geology
+  claim_kinds:
+  - age-model
+  method_types:
+  - tephrochronology

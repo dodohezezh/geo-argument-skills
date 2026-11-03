@@ -1,4 +1,4 @@
-"""Tests for the grounding gate (v0.2)."""
+"""Tests for the quote check (grounding gate)."""
 
 from __future__ import annotations
 
@@ -97,8 +97,12 @@ class GroundingTests(unittest.TestCase):
         record = ledger["records"]["ev.fz"] if "ev.fz" in ledger["records"] else list(ledger["records"].values())[1]
         self.assertEqual(record["status"], "page-mismatch")
         self.assertEqual(record["found_page"], 2)
-        self.assertEqual(main(["ground", str(self.case), "--pdf", str(self.pdf), "--strict", "--json"]), 1)
-        self.assertEqual(main(["ground", str(self.case), "--pdf", str(self.pdf), "--json"]), 0)
+        self.assertEqual(main(["ground", str(self.case), "--pdf", str(self.pdf), "--json"]), 1)
+        # Fail-closed by default: a declared quote that did not ground stops the run.
+        self.assertEqual(main(["ground", str(self.case), "--pdf", str(self.pdf), "--json"]), 1)
+        self.assertEqual(
+            main(["ground", str(self.case), "--pdf", str(self.pdf), "--allow-partial", "--json"]), 0
+        )
 
     def test_fabricated_quote_is_not_found(self) -> None:
         edit_evidence(
@@ -108,7 +112,7 @@ class GroundingTests(unittest.TestCase):
         ledger = ground_records(load_case(self.case), self.pdf)
         self.assertEqual(list(ledger["records"].values())[0]["status"], "not-found")
         self.assertEqual(ledger["acceptance_rate"], 0.667)
-        self.assertEqual(main(["ground", str(self.case), "--pdf", str(self.pdf), "--strict", "--json"]), 1)
+        self.assertEqual(main(["ground", str(self.case), "--pdf", str(self.pdf), "--json"]), 1)
 
     def test_pdf_without_text_layer_is_not_groundable(self) -> None:
         empty_pdf = write_pdf(self.tmp, pages=[[""], [""], [""]], name="empty.pdf")
@@ -116,6 +120,36 @@ class GroundingTests(unittest.TestCase):
         self.assertFalse(ledger["extracted"]["text_layer"])
         self.assertTrue(all(record["status"] == "not-groundable" for record in ledger["records"].values()))
         self.assertEqual(ledger["grounded"], 0)
+
+    def test_plain_text_docx_and_html_sources_ground(self) -> None:
+        edit_evidence(
+            self.case,
+            lambda records: [
+                record.update(source_locator={"page": 1, "quote": quote})
+                for record, quote in zip(records, QUOTES)
+            ],
+        )
+        txt = self.tmp / "paper.txt"
+        txt.write_text("\n".join(QUOTES), encoding="utf-8")
+        ledger = ground_records(load_case(self.case), txt)
+        self.assertEqual(ledger["pdf"]["format"], "txt")
+        self.assertEqual(ledger["grounded"], 3)
+        self.assertEqual(main(["ground", str(self.case), "--source", str(txt), "--json"]), 0)
+
+        import docx
+
+        document = docx.Document()
+        for quote in QUOTES:
+            document.add_paragraph(quote)
+        docx_path = self.tmp / "paper.docx"
+        document.save(docx_path)
+        ledger = ground_records(load_case(self.case), docx_path)
+        self.assertEqual(ledger["grounded"], 3)
+
+        html = self.tmp / "paper.html"
+        html.write_text("<p>" + "</p><p>".join(QUOTES) + "</p>", encoding="utf-8")
+        ledger = ground_records(load_case(self.case), html)
+        self.assertEqual(ledger["grounded"], 3)
 
     def test_record_without_locator_is_listed_not_drafted(self) -> None:
         edit_evidence(

@@ -1,4 +1,4 @@
-schema_version: geoarg/0.2
+schema_version: geoarg/0.6
 records:
 - id: ev.dated.zircon
   kind: measurement
@@ -12,6 +12,7 @@ records:
     detectability: 0.9
   independence:
     family: geochronology
+    independence_class: method
     derived_from: []
     shared_sources: []
   verification:
@@ -32,6 +33,7 @@ records:
     detectability: 0.8
   independence:
     family: field-mapping
+    independence_class: physical
     derived_from: []
     shared_sources: []
   verification:
@@ -52,6 +54,7 @@ records:
     detectability: 0.6
   independence:
     family: sedimentology
+    independence_class: physical
     derived_from: []
     shared_sources: []
   verification:

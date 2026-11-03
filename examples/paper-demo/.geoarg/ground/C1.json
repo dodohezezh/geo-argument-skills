@@ -41,5 +41,5 @@
       "status": "grounded"
     }
   },
-  "schema_version": "geoarg/ground/0.2"
+  "schema_version": "geoarg/ground/0.3"
 }

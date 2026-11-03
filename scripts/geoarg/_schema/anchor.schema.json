@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://geoarg.local/schema/anchor.schema.json",
+  "title": "GeoArg 台账检查点（anchor）",
+  "description": "对当前台账头（ledger head）的检查点文件。把它或其摘要存到案例目录外（git 提交、时间戳服务、预印本），就能证明这个台账在那之前没有重新写过。",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "claim_id",
+    "record_sha256",
+    "ledger_head",
+    "ledger_count",
+    "created_at",
+    "anchor_sha256",
+    "engine_sha256"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "geoarg/anchor/0.1"
+    },
+    "claim_id": {
+      "type": "string"
+    },
+    "record_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "检查点覆盖的 registry 记录摘要"
+    },
+    "ledger_head": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "写入检查点时的台账最后一条记录摘要"
+    },
+    "ledger_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "engine_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "note": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "anchor_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "除去本字段后的规范化 JSON 摘要"
+    }
+  }
+}
