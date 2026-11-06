@@ -18,6 +18,14 @@ from .chain import chain_problems as chain_problems_for, render_workspace, works
 from .contract import ContractError, explain, load_case, split_draft, validate
 from .domains import builtin_enums, effective_enums, load_domain, render_domains
 from .figures import build_figures, load_figures
+from .references import (
+    reference_requirements_met,
+    render_references,
+    render_sources,
+    source_gap_problems,
+    source_gaps,
+    verify_references,
+)
 from .ground import GroundError, ground_records, load_ledger, validate_grounding, write_ledger
 from .hitting import decisive_events
 from .impact import impact_report, load_evidence_file, render_impact, render_workspace_impact, workspace_impact
@@ -196,6 +204,29 @@ def _build_parser() -> argparse.ArgumentParser:
     figures_parser.add_argument("--lang", choices=("en", "zh"), default="en", help="figure language (default: en)")
     figures_parser.add_argument("--json", action="store_true", help="emit the manifest JSON instead of a summary")
 
+    sources_parser = sub.add_parser(
+        "sources", help="optional: which citations carry a quoted passage and a grounding source"
+    )
+    sources_parser.add_argument("case", help="case directory containing argument.yaml, evidence.yaml, test.yaml")
+    sources_parser.add_argument("--require-quote", action="store_true", help="fail when a citation-bearing evidence record has no source_locator.quote")
+    sources_parser.add_argument("--require-source", action="store_true", help="fail when the case cites literature but has no grounding ledger/source")
+    sources_parser.add_argument("--lang", choices=("en", "zh"), default="en", help="report language (default: en)")
+    sources_parser.add_argument("--out", default=None, help="write the report to this path instead of stdout")
+    sources_parser.add_argument("--json", action="store_true", help="emit JSON instead of a report")
+
+    references_parser = sub.add_parser(
+        "references", help="optional: verify DOI/PMCID/PMID/arXiv identifiers against Crossref and Europe PMC"
+    )
+    references_parser.add_argument("case", help="case directory containing argument.yaml, evidence.yaml, test.yaml")
+    references_parser.add_argument("--providers", default="crossref,europepmc", help="comma-separated providers (default: crossref,europepmc)")
+    references_parser.add_argument("--refresh", action="store_true", help="ignore the cached snapshot and query the providers again")
+    references_parser.add_argument("--offline", action="store_true", help="read only the cached snapshot; never touch the network")
+    references_parser.add_argument("--timeout", type=float, default=8.0, help="per-request timeout in seconds (default: 8)")
+    references_parser.add_argument("--require-verified", action="store_true", help="fail unless every checked citation is verified")
+    references_parser.add_argument("--lang", choices=("en", "zh"), default="en", help="report language (default: en)")
+    references_parser.add_argument("--out", default=None, help="write the report to this path instead of stdout")
+    references_parser.add_argument("--json", action="store_true", help="emit JSON instead of a report")
+
     impact_parser = sub.add_parser("impact", help="decision value: ablation, what-if and prospective evidence")
     impact_parser.add_argument("root", help="case directory (or a workspace directory with --workspace)")
     impact_parser.add_argument(
@@ -373,6 +404,10 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_edit(args)
     if args.cmd == "figures":
         return _cmd_figures(args)
+    if args.cmd == "sources":
+        return _cmd_sources(args)
+    if args.cmd == "references":
+        return _cmd_references(args)
     if args.cmd == "impact":
         return _cmd_impact(args)
     if args.cmd == "package":
@@ -1008,6 +1043,63 @@ def _cmd_figures(args: argparse.Namespace) -> int:
         for item in payload["figures"]:
             print(f"  {item['file']}  {item['bytes']} bytes")
     return 0
+
+
+def _cmd_sources(args: argparse.Namespace) -> int:
+    try:
+        payload = source_gaps(args.case)
+    except ContractError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    problems = source_gap_problems(
+        payload, require_quote=args.require_quote, require_source=args.require_source
+    )
+    if args.json:
+        payload = dict(payload)
+        payload["problems"] = problems
+        _emit_json(payload)
+    else:
+        report = render_sources(payload, args.lang)
+        if args.out:
+            Path(args.out).write_text(report, encoding="utf-8")
+            print(f"wrote {args.out}")
+        else:
+            print(report, end="")
+        for problem in problems:
+            print(f"FAIL {problem}")
+    return 1 if problems else 0
+
+
+def _cmd_references(args: argparse.Namespace) -> int:
+    providers = tuple(part.strip() for part in str(args.providers).split(",") if part.strip())
+    try:
+        payload = verify_references(
+            args.case,
+            providers=providers,
+            refresh=args.refresh,
+            offline=args.offline,
+            timeout=args.timeout,
+        )
+    except ContractError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    problems = reference_requirements_met(payload) if args.require_verified else []
+    if args.json:
+        payload = dict(payload)
+        payload["problems"] = problems
+        _emit_json(payload)
+    else:
+        report = render_references(payload, args.lang)
+        if args.out:
+            Path(args.out).write_text(report, encoding="utf-8")
+            print(f"wrote {args.out}")
+        else:
+            print(report, end="")
+        if args.offline:
+            print("(cached snapshot, no network)")
+        for problem in problems:
+            print(f"FAIL {problem}")
+    return 1 if problems else 0
 
 
 def _cmd_patterns(args: argparse.Namespace) -> int:

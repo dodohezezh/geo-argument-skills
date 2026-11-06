@@ -4,6 +4,13 @@ Version numbers follow semantic versioning. A major bump changes a committed
 record's compatibility: records committed by an older major version should be
 migrated and re-committed before they are trusted.
 
+## 1.9.0
+
+- Optional citation checks outside the trust chain: `geoarg sources <case>` (offline quote/source audit, `--require-quote` / `--require-source`) and `geoarg references <case>` (DOI/PMCID/PMID/arXiv verification via Crossref and Europe PMC, cached `.geoarg/references.json` snapshot, `--offline`, `--require-verified`).
+- `check` / `commit` / `verify` are unchanged and never touch the network; the new layer is advisory only.
+- New module `scripts/geoarg/references.py`, CLI commands, 13 tests, `docs/references.md`, README sections.
+- Engine digest unchanged, so existing commits remain valid.
+
 ## 1.8.0
 
 Feature release: deterministic SVG argument figures. Presentation only; no engine or schema changes, so committed records do not need re-commit.

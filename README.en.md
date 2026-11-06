@@ -68,6 +68,8 @@ No network. Only PyYAML, pypdf and python-docx are required.
 | `geoarg advise <case>` | an author checklist from the nearest domain pack: which suggested test methods and evidence families are still missing, plus the default profile and grounding hints; changes no verdict and commits nothing; `--lang`, `--json` |
 | `geoarg edit <case>` | serve the local form editor (127.0.0.1 only, token protected, atomic save, validation on save); `--host`, `--port`, `--no-browser` |
 | `geoarg figures <case>` | write four deterministic SVG figures (argument status, independence, decision value, evidence coverage); default `<case>/figures`, with `--out`, `--lang`, `--json`; `report --format html` embeds that directory, `package --include-figures` carries it |
+| `geoarg sources <case>` | optional: list which citations carry a quoted passage and grounding source; `--require-quote` / `--require-source` fail the check |
+| `geoarg references <case>` | optional: verify DOI/PMCID/PMID/arXiv against Crossref / Europe PMC and write a `.geoarg/references.json` snapshot; `--offline` reads the cache only |
 | `geoarg package <case> --out <dir>` | write a portable evidence package: folded contract, ledger/record/attestation/anchor/grounding sidecars, bound deliverables, self-contained `report.html`, SHA-256 manifest and minimal RO-Crate; `--include-source` also copies the source document |
 | `geoarg install-skills` | copy the bundled skills into the existing skill directories (`~/.dsh/skills`, `~/.claude/skills`, `./.dsh/skills`, `./.claude/skills`); `--dest` picks a directory, `--check` only compares copies for drift |
 | `geoarg doctor` | self-check the engine version, dependencies, JSON Schemas, bundled skills and installed copies |
@@ -75,7 +77,7 @@ No network. Only PyYAML, pypdf and python-docx are required.
 
 - Re-running `commit` only replaces the record; if you already ran `attest` or `anchor`, re-run them in the order commit → attest → anchor before `verify` passes again.
 
-## Trust layer (1.8)
+## Trust layer (1.9)
 
 Before 0.9, `verify` could only compare the case input, engine, verdict, and argument chain. It did not know whether the report handed to a reader came from this commit, and it could not tell whether the ledger had been replaced wholesale. 1.0 adds both:
 
@@ -285,7 +287,18 @@ Boundaries: digests prove byte identity, not that the data are true; the package
 
 `geoarg report <case> --format html` embeds `<case>/figures/*.svg` inline and keeps the page a single self-contained file; `geoarg package <case> --include-figures` copies the figures into `files/figures/` and records them in the manifest. Figures only render interpreted states: they do not enter `engine_digest`, change a verdict, or replace evidence. The rules and trade-offs are in `docs/figures.md`; some visual rules are adapted from [nature-figure-craft](https://github.com/Alto-R/nature-figure-craft) (code MIT, docs CC BY 4.0), with no code copied and no plotting dependency added.
 
-## Status and limits (v1.8)
+## Citation checks (optional, 1.9)
+
+Citation checks are an optional layer outside the trust chain. `check`, `commit` and `verify` do not contact the network and do not require it.
+
+- `geoarg sources <case>` lists, offline, which citations carry a quoted passage and whether the case has a grounding source; `--require-quote` / `--require-source` fail the check.
+- `geoarg references <case>` extracts DOI/PMCID/PMID/arXiv identifiers, queries Crossref and Europe PMC for existence plus year/first-author agreement, and reports retractions where providers expose them. The result is written to `.geoarg/references.json`; `--offline` reads the cache only, `--require-verified` passes only when everything is verified.
+
+Statuses are verified / mismatch / not-found / retracted / unverifiable / no-identifier. It checks that a reference exists and its metadata agrees; it does not check that the paper supports the claim. Books, reports and regional journals often end up unverifiable. See `docs/references.md`.
+
+This layer is an admission hint for authors and reviewers: it changes no verdict and is not a proof that a citation is true.
+
+## Status and limits (v1.9)
 
 - Does not verify the truth of a claim, only the structure, test status, and quote grounding of the argument.
 - Contracts cost effort; that is the price of a checkable argument.

@@ -87,6 +87,8 @@ geoarg doctor                       # 引擎、依赖、已装技能一起自检
 | `geoarg advise <case>` | 按最近的领域包给出作者检查清单：缺哪些建议检验方法、缺哪些期望证据族、默认 profile 与接地提示；不改变判决、不提交记录；`--lang`、`--json` |
 | `geoarg edit <case>` | 启动本地表单编辑器（仅 127.0.0.1，令牌保护，保存时原子写入并校验）；`--host`、`--port`、`--no-browser` |
 | `geoarg figures <case>` | 生成四张确定性 SVG 论证图（论证状态、独立性、决策价值、证据覆盖）；默认写入 `<case>/figures`，`--out`、`--lang`、`--json`；`report --format html` 自动内嵌该目录，`package --include-figures` 随包带走 |
+| `geoarg sources <case>` | 可选：列出每条引用是否有引文片段和接地源；`--require-quote` / `--require-source` 可让检查失败 |
+| `geoarg references <case>` | 可选：用 Crossref / Europe PMC 核验 DOI/PMCID/PMID/arXiv，写 `.geoarg/references.json` 快照；`--offline` 只读缓存 |
 | `geoarg package <case> --out <dir>` | 写出可移交的证据包：折叠契约、台账/记录/证明/锚点/接地台账、已绑定产出、自包含 `report.html`、SHA-256 清单与最小 RO-Crate；`--include-source` 一并打包来源文档 |
 | `geoarg install-skills` | 把随包的技能副本装到已存在的技能目录（`~/.dsh/skills`、`~/.claude/skills`、`./.dsh/skills`、`./.claude/skills`），`--dest` 指定目录，`--check` 只比对漂移 |
 | `geoarg doctor` | 自检引擎版本、依赖、JSON Schema、随包技能与已装技能是否一致 |
@@ -102,7 +104,7 @@ geoarg doctor                       # 引擎、依赖、已装技能一起自检
 
 `verify` 防的是无意漂移：registry 记录、台账与锚点都在案例目录里，都能被重写；重新运行 `commit` 会追加新记录；若已经 `attest` 或 `anchor`，要按 commit → attest → anchor 的顺序重跑，`verify` 才重新通过。要防伪造，需要把锚点文件抄到仓库外或交给外部时间戳服务；仓库只提供锚定所需的字节，不替你保管它。
 
-## 可信层（1.8）
+## 可信层（1.9）
 
 0.9 之前，`verify` 只能比对案例输入、引擎、判决与论证链；它不知道交付给读者的报告是不是由这次提交生成的，也不知道台账是否被整体替换。1.0 把这两件事补上：
 
@@ -319,7 +321,18 @@ enums:
 
 `geoarg report <case> --format html` 会自动内嵌 `<case>/figures/*.svg`，页面仍是单个自包含文件；`geoarg package <case> --include-figures` 把图放进证据包的 `files/figures/` 并写进 manifest。图形只是解释状态的呈现：不进入 `engine_digest`，不改变判决，也不能替代证据。规则与取舍见 `docs/figures.md`；部分视觉规则借鉴 [nature-figure-craft](https://github.com/Alto-R/nature-figure-craft)（代码 MIT、文档 CC BY 4.0），未复制其代码，也未新增绘图依赖。
 
-## 局限（v1.8）
+## 引用核验（可选，1.9）
+
+引用核验是独立于信任链的可选层，`check` / `commit` / `verify` 默认不联网、也不要求它。
+
+- `geoarg sources <case>`：离线列出每条带 citation 的证据是否有引文片段、案例是否有接地源；`--require-quote` / `--require-source` 可让检查以非零退出。
+- `geoarg references <case>`：从 citation 中提取 DOI/PMCID/PMID/arXiv，向 Crossref 和 Europe PMC 核验存在性、年份与第一作者，能报告时也报告撤稿；结果写入 `.geoarg/references.json` 快照，`--offline` 只读缓存，`--require-verified` 只在全部 verified 时通过。
+
+状态分 verified / mismatch / not-found / retracted / unverifiable / no-identifier。它核验"文献存在且元数据对得上"，不核验"内容是否支持主张"；图书、报告、地区期刊常常只能 unverifiable，这是覆盖边界，不是项目故障。详见 `docs/references.md`。
+
+引用核验是给作者和审阅者的准入提示，不改变判决，也不构成"引文为真"的证明。
+
+## 局限（v1.9）
 
 - **不验证结论的真假**，只验证论证的结构、检验状态与引文是否落地。地质学的真值不在这个仓库的射程内。
 - **契约有成本。** 填一条论证需要几条到几十条前提，这是这个方法的代价，也是它比“直接写结论”慢的原因。
