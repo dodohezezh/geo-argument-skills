@@ -1,4 +1,4 @@
-schema_version: geoarg/0.6
+schema_version: geoarg/0.7
 id: cover-age
 title: 'Cover age: the cover is younger than the dated basement'
 domain: plate-tectonics

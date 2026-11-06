@@ -271,7 +271,7 @@ def build_documents(
         )
 
     argument = {
-        "schema_version": "geoarg/0.6",
+        "schema_version": "geoarg/0.7",
         "id": case_id,
         "title": title,
         "domain": "other",
@@ -303,8 +303,8 @@ def build_documents(
             "version": "0.1-draft",
         },
     }
-    evidence = {"schema_version": "geoarg/0.6", "records": evidence_records}
-    test = {"schema_version": "geoarg/0.6", "records": tests}
+    evidence = {"schema_version": "geoarg/0.7", "records": evidence_records}
+    test = {"schema_version": "geoarg/0.7", "records": tests}
     return {
         "argument.yaml": _dump(argument, "draft skeleton imported by geoarg adopt; every TODO is a question for the author"),
         "evidence.yaml": _dump(evidence, "draft evidence records: status disputed until the author accepts them and grounds the quotes"),

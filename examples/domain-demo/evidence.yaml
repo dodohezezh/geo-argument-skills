@@ -1,4 +1,4 @@
-schema_version: geoarg/0.6
+schema_version: geoarg/0.7
 records:
 - id: ev.tephra.fingerprint
   kind: measurement

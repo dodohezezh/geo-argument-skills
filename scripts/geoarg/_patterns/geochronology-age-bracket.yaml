@@ -7,7 +7,7 @@ description: >-
   their host horizons.
 argument: |
   # template: geochronology-age-bracket; replace every TODO
-  schema_version: geoarg/0.6
+  schema_version: geoarg/0.7
   id: '{{id}}'
   title: '{{title}}'
   domain: other
@@ -65,7 +65,7 @@ argument: |
     version: 0.1-draft
 evidence: |
   # template: geochronology-age-bracket; every record is disputed until grounded
-  schema_version: geoarg/0.6
+  schema_version: geoarg/0.7
   records:
   - id: ev.upper
     kind: measurement
@@ -105,7 +105,7 @@ evidence: |
     status: disputed
 test: |
   # template: geochronology-age-bracket
-  schema_version: geoarg/0.6
+  schema_version: geoarg/0.7
   records:
   - id: T1
     name: TODO - test the closure/interpretation of both dates

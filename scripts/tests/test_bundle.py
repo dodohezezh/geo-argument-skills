@@ -99,7 +99,7 @@ class BundleTest(unittest.TestCase):
     def test_invalid_case_is_reported(self) -> None:
         _write_bundle(self.root, [{"case": "south-atlantic"}])
         argument = self.root / "south-atlantic" / "argument.yaml"
-        text = argument.read_text(encoding="utf-8").replace('schema_version: geoarg/0.6', 'schema_version: geoarg/9.9')
+        text = argument.read_text(encoding="utf-8").replace('schema_version: geoarg/0.7', 'schema_version: geoarg/9.9')
         argument.write_text(text, encoding="utf-8")
         payload = build_bundle(self.root)
         self.assertFalse(payload["ok"])

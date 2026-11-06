@@ -67,6 +67,7 @@ LABELS: dict[str, dict[str, str]] = {
         "cost": "cost",
         "result": "conclusion becomes",
         "kind": "type",
+        "counter_evidence": "Counter-evidence records",
         "description": "description",
         "n_eff": "independent evidence: about {n_eff} lines out of {total} records (mean correlation {rho})",
         "families": "fields of evidence: {families}",
@@ -132,6 +133,7 @@ LABELS: dict[str, dict[str, str]] = {
         "cost": "成本",
         "result": "结论会变成",
         "kind": "类型",
+        "counter_evidence": "反面证据记录",
         "description": "说明",
         "n_eff": "独立证据：约 {n_eff} 条 / {total} 条记录（平均相关 {rho}）",
         "families": "证据领域：{families}",
@@ -322,13 +324,14 @@ def build(case: Case, lang: str = "en", judgment: str | None = None) -> dict:
             "heading": L["defeaters"],
             "blocks": [
                 _table(
-                    [L["id"], L["state"], L["severity"], L["test"], L["description"]],
+                    [L["id"], L["state"], L["severity"], L["test"], L["counter_evidence"], L["description"]],
                     [
                         [
                             _fmt(d["id"]),
                             terms.condition_state_label("defeater", d["state"], lang),
                             terms.severity_label(d["severity"], lang),
                             _fmt(d["test"]),
+                            _fmt(", ".join(d.get("counter_evidence") or [])),
                             terms.statement_of(case, "defeater", d["id"]),
                         ]
                         for d in result["defeaters"]
@@ -342,13 +345,14 @@ def build(case: Case, lang: str = "en", judgment: str | None = None) -> dict:
             "heading": L["entailments"],
             "blocks": [
                 _table(
-                    [L["id"], L["status"], L["risk"], L["test"], L["description"]],
+                    [L["id"], L["status"], L["risk"], L["test"], L["counter_evidence"], L["description"]],
                     [
                         [
                             _fmt(e["id"]),
                             terms.condition_state_label("entailment", e["status"], lang),
                             terms.risk_label(e["risk"], lang),
                             _fmt(e["test"]),
+                            _fmt(", ".join(e.get("counter_evidence") or [])),
                             terms.statement_of(case, "entailment", e["id"]),
                         ]
                         for e in result["entailments"]

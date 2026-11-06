@@ -28,7 +28,7 @@ from typing import Any
 import yaml
 
 from .chain import scan_cases
-from .contract import Case, ContractError, load_case
+from .contract import Case, ContractError, load_case, referenced_counter_evidence
 from .independence import report as independence_report
 from .judge import judge
 
@@ -240,11 +240,13 @@ def _state_supports(test_id: str, case: Case) -> bool:
 
 def ablation(case: Case) -> dict[str, list[dict[str, Any]]]:
     base = _summary(judge(case))
+
+    counter_ids = set(referenced_counter_evidence(case))
     referenced = {
         ref
         for premise in case.argument.get("premises", [])
         for ref in premise.get("evidence_refs") or []
-    }
+    } | counter_ids
     evidence_rows: list[dict[str, Any]] = []
     for record in case.evidence.get("records", []):
         evidence_id = record.get("id")
@@ -260,6 +262,7 @@ def ablation(case: Case) -> dict[str, list[dict[str, Any]]]:
                 "class": klass,
                 "delta": delta,
                 "referenced": evidence_id in referenced,
+                "counter": evidence_id in counter_ids,
                 "verdict_without": after["verdict"],
             }
         )
@@ -393,6 +396,7 @@ def impact_report(
         "prospective_evidence": [str(record.get("id")) for record in (add_evidence or [])],
         "remaining": _remaining(after_result, working),
         "independence": {"before": before_independence, "after": after_independence, "n_eff_delta": n_delta},
+        "counter_evidence": sorted(set(referenced_counter_evidence(case))),
         "ablation": ablation(case),
         "limits": [
             "no probability is estimated and no claim is scored for plausibility",

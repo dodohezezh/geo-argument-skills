@@ -11,7 +11,7 @@ The verdict without this audit is a number without a unit. Run `geoarg judge` fo
 
 ## Preflight
 
-Run `geoarg --version` before anything else. If the command is missing, stop and tell the user the engine is not installed; do not compute verdicts, effective evidence counts, or acceptance rates by hand. If the version is older than 1.9, ask the user to upgrade before continuing.
+Run `geoarg --version` before anything else. If the command is missing, stop and tell the user the engine is not installed; do not compute verdicts, effective evidence counts, or acceptance rates by hand. If the version is older than 1.10, ask the user to upgrade before continuing.
 
 ## Steps
 

@@ -7,7 +7,7 @@ description: >-
   surface rather than a facies boundary.
 argument: |
   # template: stratigraphy-sequence-boundary; replace every TODO
-  schema_version: geoarg/0.6
+  schema_version: geoarg/0.7
   id: '{{id}}'
   title: '{{title}}'
   domain: stratigraphy
@@ -65,7 +65,7 @@ argument: |
     version: 0.1-draft
 evidence: |
   # template: stratigraphy-sequence-boundary; every record is disputed until grounded
-  schema_version: geoarg/0.6
+  schema_version: geoarg/0.7
   records:
   - id: ev.log
     kind: observation
@@ -105,7 +105,7 @@ evidence: |
     status: disputed
 test: |
   # template: stratigraphy-sequence-boundary
-  schema_version: geoarg/0.6
+  schema_version: geoarg/0.7
   records:
   - id: T1
     name: TODO - walk the surface in the field between two sections

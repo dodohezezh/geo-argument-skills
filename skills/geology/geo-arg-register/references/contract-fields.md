@@ -1,12 +1,12 @@
 # Contract field reference
 
-Three files per case directory: `argument.yaml`, `evidence.yaml`, `test.yaml`. `schema_version` is `geoarg/0.6` in all three. The same documents are described by the JSON Schemas shipped in `scripts/geoarg/_schema/` (also inside the wheel, reachable with `geoarg schema`); `validate` in `contract.py` is authoritative and enforces the required fields, enums and unique ids listed below.
+Three files per case directory: `argument.yaml`, `evidence.yaml`, `test.yaml`. `schema_version` is `geoarg/0.7` in all three. The same documents are described by the JSON Schemas shipped in `scripts/geoarg/_schema/` (also inside the wheel, reachable with `geoarg schema`); `validate` in `contract.py` is authoritative and enforces the required fields, enums and unique ids listed below.
 
 ## argument.yaml
 
 | Field | Required | Meaning |
 | --- | --- | --- |
-| `schema_version` | yes | `geoarg/0.6` |
+| `schema_version` | yes | `geoarg/0.7` |
 | `id` | yes | stable case id, for example `arg.south-atlantic.m0` |
 | `title` | yes | human name of the claim |
 | `domain` | yes | `plate-tectonics`, `stratigraphy`, `petrology`, `geomorphology`, `geophysics`, `other` |
@@ -41,6 +41,7 @@ Three files per case directory: `argument.yaml`, `evidence.yaml`, `test.yaml`. `
 | `defeaters[].severity` | yes | `fatal` or `degrading` |
 | `defeaters[].state` | yes | `unknown`, `established`, `refuted` |
 | `defeaters[].test_ref` | yes | the test that establishes or refutes it |
+| `defeaters[].counter_evidence` | optional | evidence ids recording the counter-evidence this defeat rests on |
 | `entailments[]` | yes | consequences that must hold if the claim holds |
 | `entailments[].id` | yes | `E1`, `E2`, ... |
 | `entailments[].statement` | yes | the consequence |
@@ -48,6 +49,7 @@ Three files per case directory: `argument.yaml`, `evidence.yaml`, `test.yaml`. `
 | `entailments[].risk` | yes | `low`, `medium`, `high` (how surprising the consequence is) |
 | `entailments[].status` | yes | `untested`, `supported`, `defeated`, `undetermined` |
 | `entailments[].test_ref` | expected | without a test the entailment cannot become a decisive event |
+| `entailments[].counter_evidence` | optional | evidence ids recording the result that counts against this prediction |
 | `dependencies.shared_calibration` | no | calibration products several records depend on |
 | `dependencies.depends_on` | no | argument ids this one consumes |
 | `gaps[]` | yes | what the contract cannot express |
@@ -144,6 +146,12 @@ The ledger also records the source path, format and digest together with `accept
 | `result.notes` | no | free text |
 | `pass_rule` | with `result` | `op` (`ge`, `le`, `between`, `within_ci`, `ratio`) plus the operands that op needs (`value`, `low`, `high`, `target`, `tolerance`); the engine computes `passed` / `failed` / `inconclusive` |
 | `cost` | no | numeric relative cost; `hit-set` ranks by power, then by cost |
+
+`counter_evidence` links real counter-evidence to the defeat condition or prediction it supports. The ids must
+exist in `evidence.yaml` and must not repeat inside one row. `geoarg independence` reports these records in a
+separate `counter` block and does not count them as supporting lines; `geoarg impact` marks them `counter: true`
+in leave-one-out ablation instead of `unused`; `geoarg report` prints them in the counter-evidence and prediction
+tables. The field is optional and is not part of the verdict rules.
 
 A satisfied state is bound to its test: `cp[].state: holds`, `defeaters[].state: refuted` and an entailment `status: passed` only count when a referenced test has `status: passed` with power `low` or better. Otherwise `geoarg judge` lists the item as `unbacked`, the verdict cannot rise above `UNDETERMINED`/`UNTESTED`, and `geoarg commit` refuses the case. A passed test with `discriminating_power: none` does not support anything.
 

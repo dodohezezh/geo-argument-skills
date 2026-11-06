@@ -77,7 +77,7 @@ No network. Only PyYAML, pypdf and python-docx are required.
 
 - Re-running `commit` only replaces the record; if you already ran `attest` or `anchor`, re-run them in the order commit → attest → anchor before `verify` passes again.
 
-## Trust layer (1.9)
+## Trust layer (1.10)
 
 Before 0.9, `verify` could only compare the case input, engine, verdict, and argument chain. It did not know whether the report handed to a reader came from this commit, and it could not tell whether the ledger had been replaced wholesale. 1.0 adds both:
 
@@ -287,7 +287,7 @@ Boundaries: digests prove byte identity, not that the data are true; the package
 
 `geoarg report <case> --format html` embeds `<case>/figures/*.svg` inline and keeps the page a single self-contained file; `geoarg package <case> --include-figures` copies the figures into `files/figures/` and records them in the manifest. Figures only render interpreted states: they do not enter `engine_digest`, change a verdict, or replace evidence. The rules and trade-offs are in `docs/figures.md`; some visual rules are adapted from [nature-figure-craft](https://github.com/Alto-R/nature-figure-craft) (code MIT, docs CC BY 4.0), with no code copied and no plotting dependency added.
 
-## Citation checks (optional, 1.9)
+## Citation checks (optional, 1.10)
 
 Citation checks are an optional layer outside the trust chain. `check`, `commit` and `verify` do not contact the network and do not require it.
 
@@ -298,7 +298,29 @@ Statuses are verified / mismatch / not-found / retracted / unverifiable / no-ide
 
 This layer is an admission hint for authors and reviewers: it changes no verdict and is not a proof that a citation is true.
 
-## Status and limits (v1.9)
+## Counter-evidence binding (1.10)
+
+A `defeater` or an `entailment` may carry a `counter_evidence` list of evidence ids:
+
+```yaml
+inference:
+  defeaters:
+    - id: D1
+      type: undercutting
+      severity: fatal
+      state: established
+      test_ref: T1
+      counter_evidence: [ev.surovell.resampling]
+```
+
+The field changes reporting and decision value, not the verdict rules:
+
+- `independence` adds a `counter` block (count, n_eff, families) measuring how independent the counter lines are;
+- `impact` ablation marks cited records `counter: true` and no longer labels them `unused`;
+- `report` adds a "Counter-evidence records" column to the counter-evidence and prediction tables;
+- `geoarg check` validates the ids (existing and unique); the field is optional, and leaving it out behaves exactly as in 1.9.
+
+## Status and limits (v1.10)
 
 - Does not verify the truth of a claim, only the structure, test status, and quote grounding of the argument.
 - Contracts cost effort; that is the price of a checkable argument.

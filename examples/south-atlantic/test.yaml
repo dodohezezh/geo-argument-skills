@@ -1,4 +1,4 @@
-schema_version: geoarg/0.6
+schema_version: geoarg/0.7
 records:
 - id: T1
   name: 等时线拟合与闭合差检验

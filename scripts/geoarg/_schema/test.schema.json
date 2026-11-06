@@ -11,7 +11,7 @@
   "additionalProperties": false,
   "properties": {
     "schema_version": {
-      "const": "geoarg/0.6"
+      "const": "geoarg/0.7"
     },
     "records": {
       "type": "array",

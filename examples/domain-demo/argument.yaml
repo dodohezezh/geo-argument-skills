@@ -1,4 +1,4 @@
-schema_version: geoarg/0.6
+schema_version: geoarg/0.7
 id: domain-demo
 title: 'Quaternary age model from a tephra marker'
 domain: quaternary-geology

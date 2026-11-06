@@ -7,7 +7,7 @@ description: >-
   displacement episode.
 argument: |
   # template: tectonics-slip-rate; replace every TODO
-  schema_version: geoarg/0.6
+  schema_version: geoarg/0.7
   id: '{{id}}'
   title: '{{title}}'
   domain: plate-tectonics
@@ -70,7 +70,7 @@ argument: |
     version: 0.1-draft
 evidence: |
   # template: tectonics-slip-rate; every record is disputed until grounded
-  schema_version: geoarg/0.6
+  schema_version: geoarg/0.7
   records:
   - id: ev.offset
     kind: measurement
@@ -110,7 +110,7 @@ evidence: |
     status: disputed
 test: |
   # template: tectonics-slip-rate
-  schema_version: geoarg/0.6
+  schema_version: geoarg/0.7
   records:
   - id: T1
     name: TODO - re-survey the offset marker across the fault

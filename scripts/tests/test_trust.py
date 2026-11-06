@@ -284,7 +284,7 @@ class SchemaTests(unittest.TestCase):
             raise
         self.assertEqual(problems, [])
         try:
-            problems = schemas.validate_instance({"schema_version": "geoarg/0.6"}, "argument")
+            problems = schemas.validate_instance({"schema_version": "geoarg/0.7"}, "argument")
         except schemas.SchemaError as exc:
             if "jsonschema is not installed" in str(exc):
                 self.skipTest("jsonschema is not installed")
@@ -316,7 +316,7 @@ class SchemaTests(unittest.TestCase):
         broken = Path(tempfile.mkdtemp(prefix="geoarg-schema-"))
         try:
             bad = broken / "argument.yaml"
-            bad.write_text("schema_version: geoarg/0.6\n", encoding="utf-8")
+            bad.write_text("schema_version: geoarg/0.7\n", encoding="utf-8")
             self.assertEqual(_quiet(["schema", "argument", "--validate", str(bad)]), 1)
             self.assertEqual(_quiet(["schema", "nope", "--validate", str(bad)]), 2)
         finally:

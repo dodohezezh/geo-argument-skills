@@ -17,7 +17,7 @@ from typing import Any
 from .contract import Case
 from .results import effective_status, test_status_summary
 
-RULE_VERSION = "geoarg/0.6"
+RULE_VERSION = "geoarg/0.7"
 
 VERDICTS = ("DEFEATED", "SUSPENDED", "UNTESTED", "UNDETERMINED", "SUPPORTED")
 
@@ -79,6 +79,11 @@ def _detail_code(detail: str) -> str:
     if "test failed" in detail:
         return "failed"
     return "no-pass"
+
+
+def _counter_ids(row: dict[str, Any]) -> list[str]:
+    value = row.get("counter_evidence") or []
+    return [str(item) for item in value] if isinstance(value, list) else []
 
 
 def judge(
@@ -195,7 +200,15 @@ def judge(
     for d in case.argument.get("inference", {}).get("defeaters", []):
         did = d.get("id")
         st = state("defeater", did, d.get("state", "unknown"))
-        defeaters.append({"id": did, "state": st, "severity": d.get("severity"), "test": d.get("test_ref")})
+        defeaters.append(
+            {
+                "id": did,
+                "state": st,
+                "severity": d.get("severity"),
+                "test": d.get("test_ref"),
+                "counter_evidence": _counter_ids(d),
+            }
+        )
         if st == "established":
             target = hard if d.get("severity") == "fatal" else soft
             target.append(f"defeater {did} established ({d.get('severity')})")
@@ -224,7 +237,15 @@ def judge(
     for e in case.argument.get("entailments", []):
         eid = e.get("id")
         st = state("entailment", eid, e.get("status", "untested"))
-        entailments.append({"id": eid, "status": st, "risk": e.get("risk"), "test": e.get("test_ref")})
+        entailments.append(
+            {
+                "id": eid,
+                "status": st,
+                "risk": e.get("risk"),
+                "test": e.get("test_ref"),
+                "counter_evidence": _counter_ids(e),
+            }
+        )
         if st == "failed":
             target = hard if e.get("risk") == "high" else soft
             target.append(f"entailment {eid} failed (risk {e.get('risk')})")

@@ -10,7 +10,7 @@ import yaml
 
 from .results import validate_result_block
 
-SCHEMA_VERSION = "geoarg/0.6"
+SCHEMA_VERSION = "geoarg/0.7"
 CASE_FILES = ("argument.yaml", "evidence.yaml", "test.yaml")
 
 _DOMAINS = {"plate-tectonics", "stratigraphy", "petrology", "geomorphology", "geophysics", "other"}
@@ -304,6 +304,7 @@ def validate(case: Case) -> list[str]:
             problems.append(f"{where}: state must be unknown, established, or refuted")
         if d.get("test_ref") not in test_ids:
             problems.append(f"{where}: a defeat condition without a test is rhetoric; add test_ref")
+        _validate_counter_evidence(problems, where, d, evidence_ids)
 
     entailments = argument.get("entailments", [])
     if not entailments:
@@ -318,6 +319,7 @@ def validate(case: Case) -> list[str]:
             problems.append(f"{where}: risk must be low, medium, or high")
         if e.get("test_ref") not in test_ids:
             problems.append(f"{where}: an entailment without a test cannot be verified")
+        _validate_counter_evidence(problems, where, e, evidence_ids)
 
     _need(problems, "dependencies", argument.get("dependencies", {}), ())
     if not isinstance(argument.get("gaps"), list):
@@ -502,3 +504,38 @@ def explain(problems: list[str], lang: str = "en") -> list[str]:
         rows.append(f"{problem} -> {hint}" if hint else problem)
     return rows
 
+
+def _validate_counter_evidence(problems: list[str], where: str, row: dict[str, Any], evidence_ids: set[str]) -> None:
+    value = row.get("counter_evidence")
+    if value is None:
+        return
+    if not isinstance(value, list) or any(not isinstance(item, str) or not item for item in value):
+        problems.append(f"{where}: counter_evidence must be a list of evidence ids")
+        return
+    if len(set(value)) != len(value):
+        problems.append(f"{where}: counter_evidence contains duplicate ids")
+    for ref in value:
+        if ref not in evidence_ids:
+            problems.append(f"{where}: unknown counter_evidence {ref!r}")
+
+
+def counter_evidence_refs(case: Case) -> dict[tuple[str, str], list[str]]:
+    """Map (kind, id) to the evidence ids a defeater or entailment points at."""
+    inference = case.argument.get("inference") or {}
+    rows = (("defeater", inference.get("defeaters") or []), ("entailment", case.argument.get("entailments") or []))
+    refs: dict[tuple[str, str], list[str]] = {}
+    for kind, items in rows:
+        for row in items:
+            value = row.get("counter_evidence") or []
+            if isinstance(value, list) and value:
+                refs[(kind, str(row.get("id")))] = [str(item) for item in value]
+    return refs
+
+
+def referenced_counter_evidence(case: Case) -> dict[str, list[tuple[str, str]]]:
+    """Map an evidence id to the defeats/predictions that cite it as counter-evidence."""
+    mapping: dict[str, list[tuple[str, str]]] = {}
+    for key, refs in counter_evidence_refs(case).items():
+        for ref in refs:
+            mapping.setdefault(ref, []).append(key)
+    return mapping

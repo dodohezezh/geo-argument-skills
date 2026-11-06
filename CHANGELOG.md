@@ -4,6 +4,17 @@ Version numbers follow semantic versioning. A major bump changes a committed
 record's compatibility: records committed by an older major version should be
 migrated and re-committed before they are trusted.
 
+## 1.10.0
+
+- `defeaters[]` and `entailments[]` accept an optional `counter_evidence` list of evidence ids, so real
+  counter-evidence can be attached to the condition it defeats instead of floating unreferenced.
+- `independence` reports a `counter` block (ids, count, n_eff, families) for those records without counting
+  them as support; `impact` marks them `counter: true` in leave-one-out ablation; `report` gains a
+  counter-evidence column; `contract.validate` rejects unknown or duplicate ids.
+- Contract schema version is now `geoarg/0.7` (migrate rewrites the schema_version line); `judge` reports
+  the field and `RULE_VERSION` is `geoarg/0.7`. All examples and the five real cases were migrated and
+  re-signed (commit -> attest -> anchor) at 1.10.0.
+
 ## 1.9.0
 
 - Optional citation checks outside the trust chain: `geoarg sources <case>` (offline quote/source audit, `--require-quote` / `--require-source`) and `geoarg references <case>` (DOI/PMCID/PMID/arXiv verification via Crossref and Europe PMC, cached `.geoarg/references.json` snapshot, `--offline`, `--require-verified`).

@@ -57,7 +57,7 @@ geoarg install-skills --check       # 只比对已装副本与包内版本，报
 geoarg doctor                       # 引擎、依赖、已装技能一起自检
 ```
 
-两个技能的第一步都是 `geoarg --version`：引擎缺失或低于 1.7 就停，不手算判决、`n_eff` 或验收率。wheel 内置技能副本（`geoarg/_skills`），因此 pip 安装后不依赖仓库目录。
+两个技能的第一步都是 `geoarg --version`：引擎缺失或低于 1.10 就停，不手算判决、`n_eff` 或验收率。wheel 内置技能副本（`geoarg/_skills`），因此 pip 安装后不依赖仓库目录。
 
 ## 引擎命令
 
@@ -104,7 +104,7 @@ geoarg doctor                       # 引擎、依赖、已装技能一起自检
 
 `verify` 防的是无意漂移：registry 记录、台账与锚点都在案例目录里，都能被重写；重新运行 `commit` 会追加新记录；若已经 `attest` 或 `anchor`，要按 commit → attest → anchor 的顺序重跑，`verify` 才重新通过。要防伪造，需要把锚点文件抄到仓库外或交给外部时间戳服务；仓库只提供锚定所需的字节，不替你保管它。
 
-## 可信层（1.9）
+## 可信层（1.10）
 
 0.9 之前，`verify` 只能比对案例输入、引擎、判决与论证链；它不知道交付给读者的报告是不是由这次提交生成的，也不知道台账是否被整体替换。1.0 把这两件事补上：
 
@@ -321,7 +321,7 @@ enums:
 
 `geoarg report <case> --format html` 会自动内嵌 `<case>/figures/*.svg`，页面仍是单个自包含文件；`geoarg package <case> --include-figures` 把图放进证据包的 `files/figures/` 并写进 manifest。图形只是解释状态的呈现：不进入 `engine_digest`，不改变判决，也不能替代证据。规则与取舍见 `docs/figures.md`；部分视觉规则借鉴 [nature-figure-craft](https://github.com/Alto-R/nature-figure-craft)（代码 MIT、文档 CC BY 4.0），未复制其代码，也未新增绘图依赖。
 
-## 引用核验（可选，1.9）
+## 引用核验（可选，1.10）
 
 引用核验是独立于信任链的可选层，`check` / `commit` / `verify` 默认不联网、也不要求它。
 
@@ -332,7 +332,29 @@ enums:
 
 引用核验是给作者和审阅者的准入提示，不改变判决，也不构成"引文为真"的证明。
 
-## 局限（v1.9）
+## 反面证据绑定（1.10）
+
+`defeaters[]` 与 `entailments[]` 可以各带一个 `counter_evidence` 字段，列出支撑这条反面证据或失败推论的证据 id：
+
+```yaml
+inference:
+  defeaters:
+    - id: D1
+      type: undercutting
+      severity: fatal
+      state: established
+      test_ref: T1
+      counter_evidence: [ev.surovell.resampling]
+```
+
+这个字段只影响报告与决策价值，不改变判决规则：
+
+- `independence` 额外给出反面证据自身的 `counter` 块（条数、n_eff、证据族），说明几条反证之间是否互相独立；
+- `impact` 的留一法把被这些字段引用的证据标为 `counter: true`，不再误判成 `unused`；
+- `report` 的反面证据表与推论表各多一列「反面证据记录」；
+- `geoarg check` 校验 id 存在且行内不重复；字段可选，不填时行为与 1.9 相同。
+
+## 局限（v1.10）
 
 - **不验证结论的真假**，只验证论证的结构、检验状态与引文是否落地。地质学的真值不在这个仓库的射程内。
 - **契约有成本。** 填一条论证需要几条到几十条前提，这是这个方法的代价，也是它比“直接写结论”慢的原因。

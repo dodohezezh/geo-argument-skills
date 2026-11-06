@@ -88,6 +88,33 @@ def stress(records: list[dict[str, Any]], rho_bar: float) -> dict[str, Any]:
     }
 
 
+def _counter_report(case: Case) -> dict[str, Any]:
+    from .contract import referenced_counter_evidence
+
+    mapping = referenced_counter_evidence(case)
+    ids = list(dict.fromkeys(mapping))
+    referenced = [case.evidence_by_id[item] for item in ids if item in case.evidence_by_id]
+    records = [record for record in referenced if record.get("status") == "accepted"]
+    excluded = [
+        {"id": record.get("id"), "status": record.get("status")}
+        for record in referenced
+        if record.get("status") != "accepted"
+    ]
+    n_eff, rho_bar = effective_n(records)
+    families = sorted(
+        {(record.get("independence", {}) or {}).get("family") for record in records if record.get("independence")}
+    )
+    return {
+        "ids": ids,
+        "n_records": len(records),
+        "n_eff": round(n_eff, 2),
+        "mean_rho": round(rho_bar, 3),
+        "families": families,
+        "excluded": excluded,
+        "note": "counter-evidence is not counted as support; its n_eff measures how independent the counter lines are",
+    }
+
+
 def report(case: Case) -> dict[str, Any]:
     """Build the independence report for the premises' evidence records.
 
@@ -160,6 +187,7 @@ def report(case: Case) -> dict[str, Any]:
         "warnings": warnings,
         "excluded_records": excluded,
         "declared_calibration_not_attached": undeclared,
+        "counter": _counter_report(case),
         "stress": stress(records, rho_bar),
         "note": "n_eff = n / (1 + (n - 1) * mean_rho); rho is inferred from the shared "
         "calibration/method/data claims recorded in evidence.yaml",

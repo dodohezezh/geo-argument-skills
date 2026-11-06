@@ -22,7 +22,7 @@ geoarg judge examples/paper-demo
 
 - `ground`：`pypdf` 读出 3 页文本层，3 条引文全部在原页找到，`acceptance rate 1.000`。
 - `check`：0 个问题。
-- `judge`：`UNTESTED C1 (geoarg/0.6)`，因为三条检验都还没有结果。
+- `judge`：`UNTESTED C1 (geoarg/0.7)`，因为三条检验都还没有结果。
 
 ## 故意留的坑
 
