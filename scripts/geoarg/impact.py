@@ -208,6 +208,29 @@ def _assume(case: Case, assumptions: list[str]) -> tuple[Case, dict[tuple[str, s
         value = value.strip()
         if kind not in _ASSUME_KINDS:
             raise ContractError(f"unknown assumption kind {kind!r}; use one of {', '.join(_ASSUME_KINDS)}")
+        rules = _state_rules(clone)
+        known = {
+            "premise": {row.get("id") for row in rules["premise"]},
+            "cp": {row.get("id") for row in rules["cp"]},
+            "defeater": {row.get("id") for row in rules["defeater"]},
+            "entailment": {row.get("id") for row in rules["entailment"]},
+            "test": set(clone.tests_by_id),
+            "evidence": set(clone.evidence_by_id),
+        }
+        if ident not in known[kind]:
+            raise ContractError(f"unknown {kind} {ident!r} in assumption {item!r}")
+        allowed = {
+            "test": ("passed", "failed"),
+            "evidence": ("accepted", "disputed", "retracted", "superseded"),
+            "premise": ("supported", "disputed", "unsupported", "undetermined", "missing-evidence"),
+            "cp": ("holds", "unknown", "fails"),
+            "defeater": ("established", "refuted", "unknown"),
+            "entailment": ("passed", "failed", "untested"),
+        }
+        if value not in allowed[kind]:
+            raise ContractError(
+                f"assumption value for {kind} {ident!r} must be one of {', '.join(allowed[kind])}"
+            )
         if kind == "test":
             _test_outcome(clone, ident, value)
         elif kind == "evidence":

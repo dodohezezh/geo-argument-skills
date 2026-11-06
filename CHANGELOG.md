@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.10.1 - 2026-11-06
+
+- Fix: `impact` (single case and `--workspace`) validates the contract before computing decision values, refusing invalid contracts with exit 2.
+- Fix: `figures` and `advise` refuse invalid contracts with the same clean `PROBLEM:` output instead of rendering them.
+- Fix: `impact --assume` validates ids and values; unknown ids were silently ignored before.
+- Tests: 4 new regression tests.
+
 Version numbers follow semantic versioning. A major bump changes a committed
 record's compatibility: records committed by an older major version should be
 migrated and re-committed before they are trusted.

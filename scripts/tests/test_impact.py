@@ -173,5 +173,68 @@ class ImpactCliTests(unittest.TestCase):
         self.assertIn("error:", err)
 
 
+class AssumptionValidationTests(unittest.TestCase):
+    def test_unknown_id_is_rejected(self) -> None:
+        with self.assertRaises(ContractError):
+            impact.impact_report(PAPER, assumptions=["cp:CP9=holds"])
+
+    def test_unknown_value_is_rejected(self) -> None:
+        with self.assertRaises(ContractError):
+            impact.impact_report(PAPER, assumptions=["cp:CP1=bogus"])
+
+
+class InspectCommandsRefuseInvalidContractsTests(unittest.TestCase):
+    def test_impact_figures_advise_refuse_invalid_contracts(self) -> None:
+        import shutil
+
+        import yaml
+
+        with tempfile.TemporaryDirectory(prefix="geoarg-invalid-") as tmp:
+            root = Path(tmp) / "paper-demo"
+            shutil.copytree(PAPER, root)
+            argument = yaml.safe_load((root / "argument.yaml").read_text(encoding="utf-8"))
+            argument["inference"]["defeaters"][0].pop("severity")
+            (root / "argument.yaml").write_text(
+                yaml.safe_dump(argument, sort_keys=False, allow_unicode=True),
+                encoding="utf-8",
+            )
+            for argv in (
+                ["impact", str(root)],
+                ["figures", str(root)],
+                ["advise", str(root)],
+            ):
+                code, _, err = run_cli(argv)
+                self.assertEqual(code, 2, argv)
+                self.assertIn("refusing to", err, argv)
+
+
+    def test_that_a_workspace_with_invalid_cases_is_refused(self) -> None:
+        import shutil
+
+        import yaml
+
+        with tempfile.TemporaryDirectory(prefix="geoarg-invalid-ws-") as tmp:
+            workspace = Path(tmp) / "workspace"
+            workspace.mkdir()
+            root = workspace / "paper-demo"
+            shutil.copytree(PAPER, root)
+            argument = yaml.safe_load((root / "argument.yaml").read_text(encoding="utf-8"))
+            argument["inference"]["defeaters"][0].pop("severity")
+            (root / "argument.yaml").write_text(
+                yaml.safe_dump(argument, sort_keys=False, allow_unicode=True),
+                encoding="utf-8",
+            )
+            evidence = Path(tmp) / "prospective.yaml"
+            evidence.write_text(
+                "- id: ev.new\n  kind: measurement\n  statement: A prospective record.\n",
+                encoding="utf-8",
+            )
+            code, _, err = run_cli(
+                ["impact", str(workspace), "--workspace", "--add-evidence", str(evidence)]
+            )
+            self.assertEqual(code, 2)
+            self.assertIn("refusing to impact an invalid workspace", err)
+
+
 if __name__ == "__main__":
     unittest.main()

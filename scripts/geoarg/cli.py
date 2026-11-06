@@ -1029,7 +1029,25 @@ def _cmd_edit(args: argparse.Namespace) -> int:
     return 0
 
 
+def _require_valid(case_root: str | Path, command: str):
+    """Load a case and refuse to inspect it when the contract is invalid."""
+    try:
+        case = load_case(case_root)
+    except ContractError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return None
+    invalid = validate(case)
+    if invalid:
+        for problem in invalid:
+            print(f"PROBLEM: {problem}")
+        print(f"refusing to {command} an invalid contract", file=sys.stderr)
+        return None
+    return case
+
+
 def _cmd_figures(args: argparse.Namespace) -> int:
+    if _require_valid(args.case, "figures") is None:
+        return 2
     out = Path(args.out) if args.out else Path(args.case) / "figures"
     try:
         payload = build_figures(args.case, out, lang=args.lang)
@@ -1117,6 +1135,8 @@ def _cmd_patterns(args: argparse.Namespace) -> int:
 
 
 def _cmd_advise(args: argparse.Namespace) -> int:
+    if _require_valid(args.case, "advise") is None:
+        return 2
     try:
         payload = advise(args.case)
     except ContractError as exc:
@@ -1152,6 +1172,25 @@ def _cmd_domains(args: argparse.Namespace) -> int:
 
 
 def _cmd_impact(args: argparse.Namespace) -> int:
+    if args.workspace:
+        from .chain import scan_cases
+
+        bad: list[str] = []
+        for case_root in scan_cases(args.root):
+            try:
+                case = load_case(case_root)
+            except ContractError as exc:
+                bad.append(f"{case_root.name}: {exc}")
+                continue
+            for problem in validate(case):
+                bad.append(f"{case_root.name}: {problem}")
+        if bad:
+            for problem in bad:
+                print(f"PROBLEM: {problem}")
+            print("refusing to impact an invalid workspace", file=sys.stderr)
+            return 2
+    elif _require_valid(args.root, "impact") is None:
+        return 2
     try:
         evidence = load_evidence_file(args.add_evidence) if args.add_evidence else None
         if args.workspace:

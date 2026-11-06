@@ -12,7 +12,7 @@ import shutil
 import sys
 from pathlib import Path
 
-REQUIRED_ENGINE = "1.10.0"
+REQUIRED_ENGINE = "1.10.1"
 
 
 def bundled_root() -> Path | None:
