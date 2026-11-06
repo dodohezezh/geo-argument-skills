@@ -50,6 +50,7 @@ _ROLE_ANCHOR = "anchor"
 _ROLE_GROUNDING = "grounding"
 _ROLE_SOURCE = "source"
 _ROLE_DOMAIN = "domain_pack"
+_ROLE_FIGURE = "figure"
 
 
 def _now() -> str:
@@ -227,6 +228,7 @@ def build_package(
     lang: str = "en",
     force: bool = False,
     include_source: bool = False,
+    include_figures: bool = False,
 ) -> dict[str, Any]:
     """Write a portable evidence package; return its manifest payload."""
     root = Path(case_root)
@@ -331,6 +333,26 @@ def build_package(
                 add(source, package_rel, _ROLE_SOURCE, str(raw))
                 source_entry = {"path": str(raw), "package_path": package_rel, "sha256": file_sha256(source)}
 
+    figure_entries: list[dict[str, Any]] = []
+    if include_figures:
+        figures_dir = root / "figures"
+        if not figures_dir.is_dir():
+            raise ContractError(
+                "no figures directory to include; run geoarg figures <case> first or drop --include-figures"
+            )
+        for figure_path in sorted(figures_dir.glob("*.svg")):
+            package_name = _unique(used, _safe_name(figure_path.name))
+            package_rel = f"files/figures/{package_name}"
+            add(figure_path, package_rel, _ROLE_FIGURE, str(figure_path.relative_to(root)))
+            figure_entries.append(
+                {
+                    "path": str(figure_path.relative_to(root)),
+                    "package_path": package_rel,
+                    "sha256": file_sha256(figure_path),
+                    "bytes": figure_path.stat().st_size,
+                }
+            )
+
     from .html import render_html
     from .report import build as build_report
 
@@ -384,6 +406,7 @@ def build_package(
             "judgment": judgment_entries,
         },
         "grounding": None,
+        "figures": figure_entries,
         "files": files,
     }
     if case.domain_pack and case.domain_pack.get("path"):

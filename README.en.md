@@ -67,6 +67,7 @@ No network. Only PyYAML, pypdf and python-docx are required.
 | `geoarg domains [case]` | list the built-in enums, the `domain.yaml` pack that applies to a case (including bundled patterns and field advice), and the merged effective values; `--lang`, `--json` |
 | `geoarg advise <case>` | an author checklist from the nearest domain pack: which suggested test methods and evidence families are still missing, plus the default profile and grounding hints; changes no verdict and commits nothing; `--lang`, `--json` |
 | `geoarg edit <case>` | serve the local form editor (127.0.0.1 only, token protected, atomic save, validation on save); `--host`, `--port`, `--no-browser` |
+| `geoarg figures <case>` | write four deterministic SVG figures (argument status, independence, decision value, evidence coverage); default `<case>/figures`, with `--out`, `--lang`, `--json`; `report --format html` embeds that directory, `package --include-figures` carries it |
 | `geoarg package <case> --out <dir>` | write a portable evidence package: folded contract, ledger/record/attestation/anchor/grounding sidecars, bound deliverables, self-contained `report.html`, SHA-256 manifest and minimal RO-Crate; `--include-source` also copies the source document |
 | `geoarg install-skills` | copy the bundled skills into the existing skill directories (`~/.dsh/skills`, `~/.claude/skills`, `./.dsh/skills`, `./.claude/skills`); `--dest` picks a directory, `--check` only compares copies for drift |
 | `geoarg doctor` | self-check the engine version, dependencies, JSON Schemas, bundled skills and installed copies |
@@ -74,7 +75,7 @@ No network. Only PyYAML, pypdf and python-docx are required.
 
 - Re-running `commit` only replaces the record; if you already ran `attest` or `anchor`, re-run them in the order commit → attest → anchor before `verify` passes again.
 
-## Trust layer (1.7)
+## Trust layer (1.8)
 
 Before 0.9, `verify` could only compare the case input, engine, verdict, and argument chain. It did not know whether the report handed to a reader came from this commit, and it could not tell whether the ledger had been replaced wholesale. 1.0 adds both:
 
@@ -278,7 +279,13 @@ The package is still a usable case directory for the same engine version: `geoar
 
 Boundaries: digests prove byte identity, not that the data are true; the package does not replace an external timestamp or signature service; reading it with a different engine version produces a version warning and the verdict is recomputed from the packaged contract.
 
-## Status and limits (v1.7)
+## Figures (1.8)
+
+`geoarg figures <case>` writes four SVGs: argument status (how many premises, conditions, defeaters and entailments are blocking, weakening, pending or satisfied), independence stress (reported n_eff against an assumed pairwise rho), decision value (leave-one-out evidence classes and test power against cost), and evidence coverage against detectability. Figures are drawn at the landed 88 mm or 180 mm width, keep a minimum 6 pt landed type size, and use a semantic palette with a grayscale check.
+
+`geoarg report <case> --format html` embeds `<case>/figures/*.svg` inline and keeps the page a single self-contained file; `geoarg package <case> --include-figures` copies the figures into `files/figures/` and records them in the manifest. Figures only render interpreted states: they do not enter `engine_digest`, change a verdict, or replace evidence. The rules and trade-offs are in `docs/figures.md`; some visual rules are adapted from [nature-figure-craft](https://github.com/Alto-R/nature-figure-craft) (code MIT, docs CC BY 4.0), with no code copied and no plotting dependency added.
+
+## Status and limits (v1.8)
 
 - Does not verify the truth of a claim, only the structure, test status, and quote grounding of the argument.
 - Contracts cost effort; that is the price of a checkable argument.

@@ -17,6 +17,7 @@ from .card import render_card
 from .chain import chain_problems as chain_problems_for, render_workspace, workspace_report
 from .contract import ContractError, explain, load_case, split_draft, validate
 from .domains import builtin_enums, effective_enums, load_domain, render_domains
+from .figures import build_figures, load_figures
 from .ground import GroundError, ground_records, load_ledger, validate_grounding, write_ledger
 from .hitting import decisive_events
 from .impact import impact_report, load_evidence_file, render_impact, render_workspace_impact, workspace_impact
@@ -92,6 +93,11 @@ def _build_parser() -> argparse.ArgumentParser:
                 "--out",
                 default=None,
                 help="output path (default: <case>/report.docx for docx, <case>/report.html for html, stdout for md)",
+            )
+            sub_parser.add_argument(
+                "--figures",
+                default=None,
+                help="directory of generated SVG figures to embed into the HTML report (default: <case>/figures when present)",
             )
             sub_parser.add_argument(
                 "--judgment",
@@ -182,6 +188,14 @@ def _build_parser() -> argparse.ArgumentParser:
     edit_parser.add_argument("--port", type=int, default=8765, help="port (0 picks a free port; default: 8765)")
     edit_parser.add_argument("--no-browser", action="store_true", help="do not open a browser window")
 
+    figures_parser = sub.add_parser(
+        "figures", help="write deterministic SVG figures (argument status, independence, decision value, evidence coverage)"
+    )
+    figures_parser.add_argument("case", help="case directory containing argument.yaml, evidence.yaml, test.yaml")
+    figures_parser.add_argument("--out", default=None, help="output directory (default: <case>/figures)")
+    figures_parser.add_argument("--lang", choices=("en", "zh"), default="en", help="figure language (default: en)")
+    figures_parser.add_argument("--json", action="store_true", help="emit the manifest JSON instead of a summary")
+
     impact_parser = sub.add_parser("impact", help="decision value: ablation, what-if and prospective evidence")
     impact_parser.add_argument("root", help="case directory (or a workspace directory with --workspace)")
     impact_parser.add_argument(
@@ -217,6 +231,12 @@ def _build_parser() -> argparse.ArgumentParser:
         dest="include_source",
         action="store_true",
         help="also copy the grounded source document into the package",
+    )
+    package_parser.add_argument(
+        "--include-figures",
+        dest="include_figures",
+        action="store_true",
+        help="also copy generated figures (SVG + figures.json) into the package",
     )
     package_parser.add_argument("--json", action="store_true", help="emit the manifest JSON instead of a summary")
 
@@ -351,6 +371,8 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_domains(args)
     if args.cmd == "edit":
         return _cmd_edit(args)
+    if args.cmd == "figures":
+        return _cmd_figures(args)
     if args.cmd == "impact":
         return _cmd_impact(args)
     if args.cmd == "package":
@@ -622,7 +644,12 @@ def main(argv: list[str] | None = None) -> int:
         elif args.format == "html":
             target = Path(args.out) if args.out else Path(case.root) / "report.html"
             model = build_brief(case, lang, judgment) if args.brief else build(case, lang, judgment)
-            target.write_text(render_html(model, lang), encoding="utf-8")
+            if args.figures:
+                figures = load_figures(Path(args.figures))
+            else:
+                default_figures = Path(case.root) / "figures"
+                figures = load_figures(default_figures) if default_figures.is_dir() else []
+            target.write_text(render_html(model, lang, figures=figures or None), encoding="utf-8")
             print(f"wrote {target}")
         else:
             markdown = render(case, lang, brief=args.brief, judgment=judgment)
@@ -967,6 +994,22 @@ def _cmd_edit(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_figures(args: argparse.Namespace) -> int:
+    out = Path(args.out) if args.out else Path(args.case) / "figures"
+    try:
+        payload = build_figures(args.case, out, lang=args.lang)
+    except ContractError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    if args.json:
+        _emit_json(payload)
+    else:
+        print(f"wrote {len(payload['figures'])} figure(s) to {out}")
+        for item in payload["figures"]:
+            print(f"  {item['file']}  {item['bytes']} bytes")
+    return 0
+
+
 def _cmd_patterns(args: argparse.Namespace) -> int:
     try:
         pack = load_domain(args.case) if args.case else None
@@ -1053,6 +1096,7 @@ def _cmd_package(args: argparse.Namespace) -> int:
             lang=lang,
             force=args.force,
             include_source=args.include_source,
+            include_figures=args.include_figures,
         )
     except ContractError as exc:
         print(f"error: {exc}", file=sys.stderr)

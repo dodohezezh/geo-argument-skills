@@ -182,6 +182,7 @@ def validate(case: Case) -> list[str]:
     problems: list[str] = []
     enum_values = _effective_enums(case)
     _DOMAINS = enum_values["domains"]
+    _PROFILES = enum_values["profiles"]
     _LAYERS = enum_values["layers"]
     _CLAIM_KINDS = enum_values["claim_kinds"]
     _PREMISE_STATUS = enum_values["premise_status"]

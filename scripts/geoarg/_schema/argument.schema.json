@@ -43,23 +43,13 @@
       "properties": {
         "primary": {
           "type": "string",
-          "enum": [
-            "general-geology",
-            "geochronology",
-            "planetary-geology",
-            "tectonics"
-          ]
+          "description": "Profile name; values may be widened by a domain pack. contract.validate is authoritative."
         },
         "secondary": {
           "type": "array",
           "items": {
             "type": "string",
-            "enum": [
-              "general-geology",
-              "geochronology",
-              "planetary-geology",
-              "tectonics"
-            ]
+            "description": "Profile name; values may be widened by a domain pack."
           }
         },
         "rationale": {
@@ -414,7 +404,8 @@
           "description": "冒险程度：high=只有本假说预测它，竞争假说通不过；low=各方都会预测它（无判别力）"
         },
         "status": {
-          "$ref": "#/$defs/PremiseStatus"
+          "type": "string",
+          "description": "Status vocabulary; contract.validate is authoritative. Common values: untested, passed, failed, unknown."
         },
         "notes": {
           "type": "string"

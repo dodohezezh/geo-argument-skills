@@ -86,6 +86,7 @@ geoarg doctor                       # 引擎、依赖、已装技能一起自检
 | `geoarg domains [case]` | 列出内置枚举、作用在该案例上的 `domain.yaml` 领域包（含随包模式、字段建议）与合并后的生效值；`--lang`、`--json` |
 | `geoarg advise <case>` | 按最近的领域包给出作者检查清单：缺哪些建议检验方法、缺哪些期望证据族、默认 profile 与接地提示；不改变判决、不提交记录；`--lang`、`--json` |
 | `geoarg edit <case>` | 启动本地表单编辑器（仅 127.0.0.1，令牌保护，保存时原子写入并校验）；`--host`、`--port`、`--no-browser` |
+| `geoarg figures <case>` | 生成四张确定性 SVG 论证图（论证状态、独立性、决策价值、证据覆盖）；默认写入 `<case>/figures`，`--out`、`--lang`、`--json`；`report --format html` 自动内嵌该目录，`package --include-figures` 随包带走 |
 | `geoarg package <case> --out <dir>` | 写出可移交的证据包：折叠契约、台账/记录/证明/锚点/接地台账、已绑定产出、自包含 `report.html`、SHA-256 清单与最小 RO-Crate；`--include-source` 一并打包来源文档 |
 | `geoarg install-skills` | 把随包的技能副本装到已存在的技能目录（`~/.dsh/skills`、`~/.claude/skills`、`./.dsh/skills`、`./.claude/skills`），`--dest` 指定目录，`--check` 只比对漂移 |
 | `geoarg doctor` | 自检引擎版本、依赖、JSON Schema、随包技能与已装技能是否一致 |
@@ -101,7 +102,7 @@ geoarg doctor                       # 引擎、依赖、已装技能一起自检
 
 `verify` 防的是无意漂移：registry 记录、台账与锚点都在案例目录里，都能被重写；重新运行 `commit` 会追加新记录；若已经 `attest` 或 `anchor`，要按 commit → attest → anchor 的顺序重跑，`verify` 才重新通过。要防伪造，需要把锚点文件抄到仓库外或交给外部时间戳服务；仓库只提供锚定所需的字节，不替你保管它。
 
-## 可信层（1.7）
+## 可信层（1.8）
 
 0.9 之前，`verify` 只能比对案例输入、引擎、判决与论证链；它不知道交付给读者的报告是不是由这次提交生成的，也不知道台账是否被整体替换。1.0 把这两件事补上：
 
@@ -312,7 +313,13 @@ enums:
 
 边界：摘要只证明字节一致，不证明数据为真；包不替代外部时间戳或签名服务；跨引擎版本读取时 `verify-package` 会给出版本警告，判决重算仍以包内契约为准。
 
-## 局限（v1.7）
+## 论证图（1.8）
+
+`geoarg figures <case>` 生成四张 SVG：论证状态（各条前提/条件/判废条件/蕴含分别有多少阻断、削弱、待定、满足）、独立性压力（报告的 n_eff 随假定 pairwise rho 的变化）、决策价值（留一法消融的证据类别，以及检验的判别力对成本）、证据覆盖与可检测性。图直接按 88 mm 或 180 mm 落地宽度绘制，落在纸面后的字号不低于 6 pt，并配有语义色板与灰度检查。
+
+`geoarg report <case> --format html` 会自动内嵌 `<case>/figures/*.svg`，页面仍是单个自包含文件；`geoarg package <case> --include-figures` 把图放进证据包的 `files/figures/` 并写进 manifest。图形只是解释状态的呈现：不进入 `engine_digest`，不改变判决，也不能替代证据。规则与取舍见 `docs/figures.md`；部分视觉规则借鉴 [nature-figure-craft](https://github.com/Alto-R/nature-figure-craft)（代码 MIT、文档 CC BY 4.0），未复制其代码，也未新增绘图依赖。
+
+## 局限（v1.8）
 
 - **不验证结论的真假**，只验证论证的结构、检验状态与引文是否落地。地质学的真值不在这个仓库的射程内。
 - **契约有成本。** 填一条论证需要几条到几十条前提，这是这个方法的代价，也是它比“直接写结论”慢的原因。

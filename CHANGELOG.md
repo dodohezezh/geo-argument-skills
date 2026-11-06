@@ -4,6 +4,25 @@ Version numbers follow semantic versioning. A major bump changes a committed
 record's compatibility: records committed by an older major version should be
 migrated and re-committed before they are trusted.
 
+## 1.8.0
+
+Feature release: deterministic SVG argument figures. Presentation only; no engine or schema changes, so committed records do not need re-commit.
+
+- New `geoarg figures <case>`: four deterministic SVG figures - argument status (reason buckets per item kind), independence stress (n_eff against an assumed pairwise rho), decision value (leave-one-out evidence classes plus test power against cost), and evidence coverage against detectability. Output defaults to `<case>/figures`, with `--out`, `--lang`, `--json`; `figures.json` records every file's byte count and SHA-256.
+- `report --format html` now embeds `<case>/figures/*.svg` inline (or a `--figures <dir>` override) and keeps the page a single self-contained file; `package --include-figures` copies the figures into `files/figures/` and records them in the manifest.
+- New `figstyle.py` (verdict/reason/evidence palettes, WCAG contrast, grayscale-conflict check, landed 88/180 mm widths, minimum 6 pt landed type) and `figsvg.py` (a small deterministic millimetre-unit SVG canvas); no new third-party dependency.
+- Visual rules adapted from nature-figure-craft (code MIT, docs CC BY 4.0), with no code or assets copied; figures are not part of `engine_digest`, a verdict, or a trust-chain check.
+- Docs: `docs/figures.md`; README (Chinese and English) gained the command row and a 1.8 section; 11 new tests cover determinism, landed widths, HTML embedding, CLI behaviour, and the palette/font rules.
+
+## 1.7.2
+
+Patch release: engine fixes found by the YDIH real-world pilot. Committed records must be re-committed (engine digest changed).
+
+- Domain packs can now actually extend `profiles`: `contract.validate` bound the built-in profile set instead of the pack-widened one, so a valid pack that added a profile still failed validation.
+- `geoarg workspace` now prints a "Committed-record drift" table for every committed case; previously the section always said "No case carries a committed record" and only leaked verify problems into the Problems list.
+- The shipped `argument.schema.json` no longer rejects valid pack-extended profiles or a `failed` entailment status; it stays a shape check while `contract.validate` remains authoritative.
+- New regression tests: `scripts/tests/test_domain_extensions.py` (pack profile widening, pack digest changes, workspace drift rows, schema acceptance).
+
 ## 1.7.1
 
 Patch release: content cleanup, no engine or schema changes. Committed records do not need re-commit.

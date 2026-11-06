@@ -329,18 +329,26 @@ def _evidence_digest(record: dict[str, Any]) -> str:
 
 
 def _drift_problems(root: Path) -> list[str]:
+    return _drift_info(root)["problems"]
+
+
+def _drift_info(root: Path) -> dict[str, Any]:
+    """Verify one case's committed record when the case has one."""
     from . import audit
 
     registry_dir = root / ".geoarg" / "registry"
-    if not registry_dir.is_dir():
-        return []
-    if not any(registry_dir.glob("*.json")):
-        return []
+    if not registry_dir.is_dir() or not any(registry_dir.glob("*.json")):
+        return {"committed": False, "ok": True, "problems": []}
     try:
-        ok, problems, _record = audit.verify(root)
+        ok, problems, record = audit.verify(root)
     except ContractError as exc:  # pragma: no cover - defensive
-        return [f"cannot verify committed record: {exc}"]
-    return problems
+        return {"committed": True, "ok": False, "problems": [f"cannot verify committed record: {exc}"]}
+    return {
+        "committed": True,
+        "ok": bool(ok),
+        "problems": list(problems),
+        "verdict": (record or {}).get("verdict"),
+    }
 
 
 def workspace_report(root: str | Path) -> dict[str, Any]:
@@ -349,6 +357,7 @@ def workspace_report(root: str | Path) -> dict[str, Any]:
     cases: list[dict[str, Any]] = []
     chains: list[dict[str, Any]] = []
     problems: list[str] = []
+    drift: list[dict[str, Any]] = []
     evidence: dict[str, list[dict[str, Any]]] = {}
     argument_ids: dict[str, list[str]] = {}
 
@@ -409,7 +418,17 @@ def workspace_report(root: str | Path) -> dict[str, Any]:
             evidence.setdefault(str(record["id"]), []).append(
                 {"case": label, "digest": _evidence_digest(record)}
             )
-        problems.extend(f"{label}: {item}" for item in _drift_problems(case_root))
+        info = _drift_info(case_root)
+        if info.get("committed"):
+            drift.append(
+                {
+                    "case": label,
+                    "ok": bool(info.get("ok")),
+                    "verdict": info.get("verdict"),
+                    "problems": list(info.get("problems") or []),
+                }
+            )
+            problems.extend(f"{label}: {item}" for item in info.get("problems") or [])
 
     if load_workspace(root):
         for argument_id, labels in sorted(argument_ids.items()):
@@ -440,6 +459,7 @@ def workspace_report(root: str | Path) -> dict[str, Any]:
         "chains": chains,
         "evidence_shared": evidence_shared,
         "evidence_conflicts": evidence_conflicts,
+        "drift": drift,
         "cycles": sorted(set(cycles)),
         "problems": problems,
         "ok": not problems,
@@ -471,7 +491,11 @@ def _labels(lang: str) -> dict[str, str]:
             "conflicts_heading": "证据冲突",
             "conflicts_none": "没有发现同一证据 id 在不同论证里内容不一致。",
             "drift_heading": "台账漂移",
-            "drift_none": "没有已提交台账的案例。",
+            "drift_none": "没有已提交的案例；工作区只做结构检查。",
+            "drift_none_problems": "无",
+            "drift_state": "状态",
+            "drift_ok": "通过",
+            "drift_bad": "不一致",
             "problems_heading": "问题",
             "problems_none": "没有发现问题。",
             "ok": "工作区结论：结构一致。",
@@ -497,7 +521,11 @@ def _labels(lang: str) -> dict[str, str]:
         "conflicts_heading": "Evidence conflicts",
         "conflicts_none": "No evidence id is reused with different content.",
         "drift_heading": "Committed-record drift",
-        "drift_none": "No case carries a committed record.",
+        "drift_none": "No committed cases; the workspace only ran structural checks.",
+        "drift_none_problems": "none",
+        "drift_state": "State",
+        "drift_ok": "OK",
+        "drift_bad": "MISMATCH",
         "problems_heading": "Problems",
         "problems_none": "No problems found.",
         "ok": "Workspace conclusion: structurally consistent.",
@@ -562,10 +590,14 @@ def render_workspace(report: dict[str, Any], lang: str = "en") -> str:
     lines.append("")
     lines.append(f"## {labels['drift_heading']}")
     lines.append("")
-    drift = [p for p in problems if "since commit" in p or "ledger" in p or "verdict changed" in p]
+    drift = report.get("drift") or []
     if drift:
-        for item in drift:
-            lines.append(f"- {item}")
+        lines.append(f"| {labels['case']} | {labels['drift_state']} | {labels['problems_heading']} |")
+        lines.append("|---|---|---|")
+        for row in drift:
+            state = labels["drift_ok"] if row.get("ok") else labels["drift_bad"]
+            detail = "; ".join(row.get("problems") or []) or labels["drift_none_problems"]
+            lines.append(f"| {row.get('case') or '-'} | {state} | {detail} |")
     else:
         lines.append(labels["drift_none"])
     lines.append("")
