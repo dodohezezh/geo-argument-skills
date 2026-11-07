@@ -18,7 +18,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from .contract import load_case
+from .contract import Case, load_case
 
 
 def _labels(lang: str) -> dict[str, str]:
@@ -77,10 +77,14 @@ def _declared_families(case: Any) -> set[str]:
     return families
 
 
-def advise(case_root: str | Path) -> dict[str, Any]:
+def advise(case_or_root: Case | str | Path) -> dict[str, Any]:
     """Return the advice payload for one case."""
-    root = Path(case_root)
-    case = load_case(root)
+    if isinstance(case_or_root, Case):
+        case = case_or_root
+        root = Path(case.root)
+    else:
+        root = Path(case_or_root)
+        case = load_case(root)
     pack = case.domain_pack
     claim = case.claim or {}
     claim_kind = str(claim.get("kind") or "")

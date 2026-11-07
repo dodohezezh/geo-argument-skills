@@ -428,10 +428,10 @@ def _coverage_svg(case: Case, lang: str) -> figsvg.Svg:
     return svg
 
 
-def build_figures(case_root: str | Path, out_dir: str | Path, *, lang: str = "en") -> dict[str, Any]:
+def build_figures(case_or_root: Case | str | Path, out_dir: str | Path, *, lang: str = "en") -> dict[str, Any]:
     """Write the four SVG figures plus ``figures.json``; return the manifest."""
-    root = Path(case_root)
-    case = load_case(root)
+    case = case_or_root if isinstance(case_or_root, Case) else load_case(case_or_root)
+    root = Path(case.root)
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     try:

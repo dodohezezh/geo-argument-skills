@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.11.0
+
+Performance and structure pass, no behavior change:
+
+- CLI startup is lazy: the parser and shared helpers moved to `cli_parser.py` and
+  `cli_common.py`, and every command handler imports its engine modules inside
+  the handler. `geoarg --version` dropped from ~237-338 ms to ~182-208 ms in the
+  local measurement (warm/cold), with no command behavior change.
+- `figures`, `advise` and `impact` reuse the `Case` already loaded for contract
+  validation instead of loading the same case twice.
+- The ledger is parsed once per append: `append_ledger` now reads, parses and
+  rewrites the file in one pass instead of reading it twice.
+- `audit.verify` already read the ledger once; this pass keeps that invariant and
+  documents it.
+
+Tests: 272 OK (skipped=1).
+
 ## 1.10.1 - 2026-11-06
 
 - Fix: `impact` (single case and `--workspace`) validates the contract before computing decision values, refusing invalid contracts with exit 2.

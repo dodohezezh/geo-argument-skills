@@ -113,16 +113,9 @@ def _ledger_path(root: Path) -> Path:
     return root / ".geoarg" / LEDGER_FILE
 
 
-def _read_ledger(root: Path) -> tuple[list[dict[str, Any]], list[str]]:
-    path = _ledger_path(root)
-    if not path.is_file():
-        return [], []
+def _parse_ledger(text: str) -> tuple[list[dict[str, Any]], list[str]]:
     entries: list[dict[str, Any]] = []
     problems: list[str] = []
-    try:
-        text = path.read_text(encoding="utf-8-sig")
-    except (OSError, UnicodeDecodeError) as exc:  # pragma: no cover - defensive
-        return [], [f"ledger unreadable: {exc}"]
     for number, line in enumerate(text.splitlines(), 1):
         if not line.strip():
             continue
@@ -151,6 +144,17 @@ def _read_ledger(root: Path) -> tuple[list[dict[str, Any]], list[str]]:
     return entries, problems
 
 
+def _read_ledger(root: Path) -> tuple[list[dict[str, Any]], list[str]]:
+    path = _ledger_path(root)
+    if not path.is_file():
+        return [], []
+    try:
+        text = path.read_text(encoding="utf-8-sig")
+    except (OSError, UnicodeDecodeError) as exc:  # pragma: no cover - defensive
+        return [], [f"ledger unreadable: {exc}"]
+    return _parse_ledger(text)
+
+
 def ledger_entries(root: str | Path) -> tuple[list[dict[str, Any]], list[str]]:
     """Public read of the ledger entries and chain problems."""
     return _read_ledger(Path(root))
@@ -172,7 +176,15 @@ def append_ledger(
     """
     if kind not in LEDGER_KINDS:
         raise ContractError(f"unknown ledger entry kind: {kind}")
-    entries, problems = _read_ledger(root)
+    path = _ledger_path(root)
+    if path.is_file():
+        try:
+            existing = path.read_text(encoding="utf-8-sig")
+        except (OSError, UnicodeDecodeError) as exc:  # pragma: no cover - defensive
+            raise ContractError(f"ledger unreadable: {exc}") from exc
+    else:
+        existing = ""
+    entries, problems = _parse_ledger(existing)
     if problems:
         raise ContractError("; ".join(problems))
     entry: dict[str, Any] = {
@@ -187,9 +199,7 @@ def append_ledger(
         if key not in entry:
             entry[key] = value
     entry["sha256"] = _entry_sha256(entry)
-    path = _ledger_path(root)
     path.parent.mkdir(parents=True, exist_ok=True)
-    existing = path.read_text(encoding="utf-8-sig") if path.is_file() else ""
     line = json.dumps(entry, ensure_ascii=False, sort_keys=True)
     if existing and not existing.endswith("\n"):
         existing += "\n"
