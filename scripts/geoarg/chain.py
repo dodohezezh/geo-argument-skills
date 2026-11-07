@@ -18,7 +18,7 @@ from typing import Any
 
 import yaml
 
-from .contract import CASE_FILES, ContractError, load_case, validate
+from .contract import CASE_FILES, Case, ContractError, load_case, validate
 from .judge import judge
 from . import terms
 
@@ -153,6 +153,7 @@ def _resolve_entry(
     index: dict[str, Path],
     memo: dict[str, dict[str, Any]],
     stack: list[str],
+    cases: dict[str, Case] | None = None,
 ) -> dict[str, Any]:
     target = resolve_target(root, ref, index)
     if target is None:
@@ -185,8 +186,10 @@ def _resolve_entry(
             "chain_sha256": cached["chain_sha256"],
         }
     try:
-        target_case = load_case(target, attach_chain=False)
-        target_chain = _load_chain(target, index, memo, stack + [key])
+        if cases is not None and key not in cases:
+            cases[key] = load_case(target, attach_chain=False)
+        target_case = cases[key] if cases is not None else load_case(target, attach_chain=False)
+        target_chain = _load_chain(target, index, memo, stack + [key], cases)
         target_verdict = judge(target_case, chain=target_chain)["verdict"]
     except ContractError as exc:
         return {
@@ -243,22 +246,28 @@ def _load_chain(
     index: dict[str, Path],
     memo: dict[str, dict[str, Any]],
     stack: list[str],
+    cases: dict[str, Case] | None = None,
 ) -> dict[str, Any]:
-    case = load_case(root, attach_chain=False)
+    key = str(root.resolve())
+    case = cases.get(key) if cases is not None else None
+    if case is None:
+        case = load_case(root, attach_chain=False)
+        if cases is not None:
+            cases[key] = case
     chain: dict[str, Any] = {}
     for premise in case.argument.get("premises") or []:
         if not isinstance(premise, dict) or premise.get("kind") != "derived":
             continue
         ref = str(premise.get("argument_ref") or "")
-        chain[ref] = _resolve_entry(root, ref, index, memo, stack)
+        chain[ref] = _resolve_entry(root, ref, index, memo, stack, cases)
     return chain
 
 
-def load_chain(root: str | Path) -> dict[str, Any]:
+def load_chain(root: str | Path, cases: dict[str, Case] | None = None) -> dict[str, Any]:
     """Resolve every derived-premise reference reachable from one case."""
     root = Path(root).resolve()
     index = workspace_index(root)
-    return _load_chain(root, index, {}, [str(root)])
+    return _load_chain(root, index, {}, [str(root)], cases)
 
 
 def chain_digest_from(chain: dict[str, Any]) -> str:
@@ -282,11 +291,7 @@ def chain_summary(root: str | Path) -> dict[str, Any]:
     return {"sha256": chain_digest_from(chain), "entries": entries}
 
 
-def chain_problems(root: str | Path) -> list[str]:
-    """Structural problems in the argument chain of one case."""
-    root = Path(root).resolve()
-    index = workspace_index(root)
-    chain = _load_chain(root, index, {}, [str(root)])
+def _chain_problems_from(chain: dict[str, Any]) -> list[str]:
     problems: list[str] = []
     for ref, entry in sorted(chain.items()):
         status = entry.get("status")
@@ -305,6 +310,13 @@ def chain_problems(root: str | Path) -> list[str]:
                 f"argument chain: premise reference {ref!r} points at a broken case: {entry.get('reason')}"
             )
     return problems
+
+
+def chain_problems(root: str | Path, cases: dict[str, Case] | None = None) -> list[str]:
+    """Structural problems in the argument chain of one case."""
+    root = Path(root).resolve()
+    index = workspace_index(root)
+    return _chain_problems_from(_load_chain(root, index, {}, [str(root)], cases))
 
 
 # ---------------------------------------------------------------- workspace scan
@@ -351,8 +363,13 @@ def _drift_info(root: Path) -> dict[str, Any]:
     }
 
 
-def workspace_report(root: str | Path) -> dict[str, Any]:
-    """Scan a workspace: cases, verdicts, chains, evidence reuse and drift."""
+def workspace_report(root: str | Path, *, judge_cases: bool = True) -> dict[str, Any]:
+    """Scan a workspace: cases, verdicts, chains, evidence reuse and drift.
+
+    ``judge_cases=False`` is the fast mode: contracts are loaded and validated,
+    but no case is judged, no chain is resolved and committed-record drift is
+    skipped.
+    """
     root = Path(root).resolve()
     cases: list[dict[str, Any]] = []
     chains: list[dict[str, Any]] = []
@@ -360,36 +377,48 @@ def workspace_report(root: str | Path) -> dict[str, Any]:
     drift: list[dict[str, Any]] = []
     evidence: dict[str, list[dict[str, Any]]] = {}
     argument_ids: dict[str, list[str]] = {}
+    mode = "full" if judge_cases else "fast"
 
     roots = scan_cases(root)
     if not roots:
         return {
             "root": str(root),
+            "mode": mode,
             "cases": [],
             "chains": [],
             "evidence_shared": [],
             "evidence_conflicts": [],
             "drift": [],
+            "cycles": [],
             "problems": ["no case directories with argument.yaml found"],
             "ok": False,
         }
 
+    loaded: dict[str, Case] = {}
     for case_root in roots:
         label = _rel(case_root, root)
+        key = str(case_root.resolve())
         try:
-            case = load_case(case_root)
+            case = load_case(case_root, attach_chain=False)
         except ContractError as exc:
             problems.append(f"{label}: cannot load: {exc}")
             continue
+        loaded[key] = case
         argument_id = str(case.argument.get("id") or "")
         if argument_id:
             argument_ids.setdefault(argument_id, []).append(label)
         invalid = validate(case)
         verdict = None
+        chain: dict[str, Any] = {}
         if invalid:
             problems.append(f"{label}: invalid contract: {'; '.join(invalid)}")
-        else:
-            verdict = judge(case)["verdict"]
+        elif judge_cases:
+            try:
+                case_index = workspace_index(case_root)
+                chain = _load_chain(Path(key), case_index, {}, [key], loaded)
+                verdict = judge(case, chain=chain)["verdict"]
+            except ContractError as exc:
+                problems.append(f"{label}: cannot judge: {exc}")
         cases.append(
             {
                 "case": label,
@@ -400,7 +429,7 @@ def workspace_report(root: str | Path) -> dict[str, Any]:
                 "verdict": verdict,
             }
         )
-        for ref, entry in sorted(getattr(case, "chain", {}).items() or {}):
+        for ref, entry in sorted(chain.items()):
             chains.append(
                 {
                     "argument_id": argument_id,
@@ -411,24 +440,37 @@ def workspace_report(root: str | Path) -> dict[str, Any]:
                     "target_verdict": entry.get("verdict"),
                 }
             )
-        problems.extend(f"{label}: {item}" for item in chain_problems(case_root))
+        problems.extend(f"{label}: {item}" for item in _chain_problems_from(chain))
         for record in case.evidence.get("records") or []:
             if not isinstance(record, dict) or not record.get("id"):
                 continue
             evidence.setdefault(str(record["id"]), []).append(
                 {"case": label, "digest": _evidence_digest(record)}
             )
-        info = _drift_info(case_root)
-        if info.get("committed"):
-            drift.append(
-                {
-                    "case": label,
-                    "ok": bool(info.get("ok")),
-                    "verdict": info.get("verdict"),
-                    "problems": list(info.get("problems") or []),
-                }
-            )
-            problems.extend(f"{label}: {item}" for item in info.get("problems") or [])
+        if judge_cases:
+            info = _drift_info(case_root)
+            if info.get("committed"):
+                drift.append(
+                    {
+                        "case": label,
+                        "ok": bool(info.get("ok")),
+                        "verdict": info.get("verdict"),
+                        "problems": list(info.get("problems") or []),
+                    }
+                )
+                problems.extend(f"{label}: {item}" for item in info.get("problems") or [])
+        else:
+            registry_dir = case_root / ".geoarg" / "registry"
+            if registry_dir.is_dir() and any(registry_dir.glob("*.json")):
+                drift.append(
+                    {
+                        "case": label,
+                        "ok": None,
+                        "verdict": None,
+                        "problems": [],
+                        "skipped": True,
+                    }
+                )
 
     if load_workspace(root):
         for argument_id, labels in sorted(argument_ids.items()):
@@ -455,6 +497,7 @@ def workspace_report(root: str | Path) -> dict[str, Any]:
     cycles = [problem for problem in problems if problem.startswith("argument chain cycle:")]
     return {
         "root": str(root),
+        "mode": mode,
         "cases": cases,
         "chains": chains,
         "evidence_shared": evidence_shared,
@@ -496,6 +539,7 @@ def _labels(lang: str) -> dict[str, str]:
             "drift_state": "状态",
             "drift_ok": "通过",
             "drift_bad": "不一致",
+            "drift_skipped": "已跳过",
             "problems_heading": "问题",
             "problems_none": "没有发现问题。",
             "ok": "工作区结论：结构一致。",
@@ -526,6 +570,7 @@ def _labels(lang: str) -> dict[str, str]:
         "drift_state": "State",
         "drift_ok": "OK",
         "drift_bad": "MISMATCH",
+        "drift_skipped": "skipped",
         "problems_heading": "Problems",
         "problems_none": "No problems found.",
         "ok": "Workspace conclusion: structurally consistent.",
@@ -539,6 +584,14 @@ def render_workspace(report: dict[str, Any], lang: str = "en") -> str:
     lines = [f"# {labels['title'].format(root=report.get('root', ''))}", ""]
     lines.append(labels["intro"].format(count=len(report.get("cases") or [])))
     lines.append("")
+    if report.get("mode") == "fast":
+        lines.append(
+            "Fast mode (--no-judge): verdicts, argument chains and committed-record "
+            "drift checks were skipped."
+            if lang != "zh"
+            else "快速模式（--no-judge）：已跳过判决、论证链和台账漂移检查。"
+        )
+        lines.append("")
     lines.append(f"## {labels['cases_heading']}")
     lines.append("")
     if report.get("cases"):
@@ -595,7 +648,10 @@ def render_workspace(report: dict[str, Any], lang: str = "en") -> str:
         lines.append(f"| {labels['case']} | {labels['drift_state']} | {labels['problems_heading']} |")
         lines.append("|---|---|---|")
         for row in drift:
-            state = labels["drift_ok"] if row.get("ok") else labels["drift_bad"]
+            if row.get("skipped"):
+                state = labels["drift_skipped"]
+            else:
+                state = labels["drift_ok"] if row.get("ok") else labels["drift_bad"]
             detail = "; ".join(row.get("problems") or []) or labels["drift_none_problems"]
             lines.append(f"| {row.get('case') or '-'} | {state} | {detail} |")
     else:

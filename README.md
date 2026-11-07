@@ -57,7 +57,7 @@ geoarg install-skills --check       # 只比对已装副本与包内版本，报
 geoarg doctor                       # 引擎、依赖、已装技能一起自检
 ```
 
-两个技能的第一步都是 `geoarg --version`：引擎缺失或低于 1.11 就停，不手算判决、`n_eff` 或验收率。wheel 内置技能副本（`geoarg/_skills`），因此 pip 安装后不依赖仓库目录。
+两个技能的第一步都是 `geoarg --version`：引擎缺失或低于 1.12 就停，不手算判决、`n_eff` 或验收率。wheel 内置技能副本（`geoarg/_skills`），因此 pip 安装后不依赖仓库目录。
 
 ## 引擎命令
 
@@ -78,7 +78,7 @@ geoarg doctor                       # 引擎、依赖、已装技能一起自检
 | `geoarg ground <case> --source <paper>` | 把每条 `source_locator` 的引文与源文档比对（PDF/DOCX/HTML/Markdown/纯文本），写接地台账并算验收率；有未接地引文时默认非零退出（`--allow-partial` 仅用于查看半成品台账）；旧的 `--pdf` 仍可用 |
 | `geoarg migrate <case\|dir>` | 把 case 的三个 YAML（或 `bundle.yaml`、`workspace.yaml`）的 `schema_version` 行改写为当前版本，其余字节不动；`--dry-run` 只报告不改 |
 | `geoarg bundle <dir>` | 读 `bundle.yaml`，给一组案例各算判决，取必需主张里最弱的一条作为论文组结论；`--json`、`--out`、`--lang` |
-| `geoarg workspace <dir>` | 扫描目录下每个案例：判决、论证链、跨案例共用的证据、同一证据 id 内容冲突、已提交记录的漂移；有任何问题非零退出；`--json`、`--format html`、`--out`、`--lang` |
+| `geoarg workspace <dir>` | 扫描目录下每个案例：判决、论证链、跨案例共用的证据、同一证据 id 内容冲突、已提交记录的漂移；`--no-judge` 快速模式只做结构检查，跳过判决、链路和漂移；有任何问题非零退出；`--json`、`--format html`、`--out`、`--lang` |
 | `geoarg patterns` | 列出随包的论证模式（年代夹持、层序界面、滑动速率），并说明如何用 `geoarg new` 起一个骨架 |
 | `geoarg new <dir> --pattern <name>` | 按模式生成三份 YAML 草稿（含 TODO）；`--id` / `--title` / `--claim` 可覆盖；已存在案例时拒绝覆盖（`--force`） |
 | `geoarg adopt <notes.md> --out <dir>` | 确定性地把 Markdown 提纲（`Claim`/`Premises`/`Evidence`/`Tests` 小节）转成草稿案例；不确定的值一律标 TODO |
@@ -104,7 +104,7 @@ geoarg doctor                       # 引擎、依赖、已装技能一起自检
 
 `verify` 防的是无意漂移：registry 记录、台账与锚点都在案例目录里，都能被重写；重新运行 `commit` 会追加新记录；若已经 `attest` 或 `anchor`，要按 commit → attest → anchor 的顺序重跑，`verify` 才重新通过。要防伪造，需要把锚点文件抄到仓库外或交给外部时间戳服务；仓库只提供锚定所需的字节，不替你保管它。
 
-## 可信层（1.11）
+## 可信层（1.12）
 
 0.9 之前，`verify` 只能比对案例输入、引擎、判决与论证链；它不知道交付给读者的报告是不是由这次提交生成的，也不知道台账是否被整体替换。1.0 把这两件事补上：
 
@@ -354,7 +354,7 @@ inference:
 - `report` 的反面证据表与推论表各多一列「反面证据记录」；
 - `geoarg check` 校验 id 存在且行内不重复；字段可选，不填时行为与 1.9 相同。
 
-## 局限（v1.11）
+## 局限（v1.12）
 
 - **不验证结论的真假**，只验证论证的结构、检验状态与引文是否落地。地质学的真值不在这个仓库的射程内。
 - **契约有成本。** 填一条论证需要几条到几十条前提，这是这个方法的代价，也是它比“直接写结论”慢的原因。

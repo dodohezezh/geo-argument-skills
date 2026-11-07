@@ -6,9 +6,23 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-import yaml
-
 from .results import validate_result_block
+
+
+class _LazyYaml:
+    """Proxy for PyYAML so importing the engine does not load it.
+
+    Attribute access imports ``yaml`` on first use; ``geoarg --version`` and
+    other commands that never touch a contract stay fast.
+    """
+
+    def __getattr__(self, name: str) -> Any:
+        import yaml as module
+
+        return getattr(module, name)
+
+
+yaml = _LazyYaml()
 
 SCHEMA_VERSION = "geoarg/0.7"
 CASE_FILES = ("argument.yaml", "evidence.yaml", "test.yaml")

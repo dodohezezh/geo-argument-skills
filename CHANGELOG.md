@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.12.0 - workspace cache, fast mode, lazy PyYAML
+
+- `geoarg workspace` now loads each case once and shares the loaded cases while
+  resolving argument chains and judging; measured on `examples/` 534 ms -> ~66 ms,
+  and on a 16-case workspace 808 ms -> ~235 ms.
+- `geoarg workspace --no-judge` is a fast structural scan: it loads and validates
+  every contract but skips verdicts, chain resolution and committed-record drift.
+- The chain problem list is derived from the already resolved chain instead of
+  resolving it a second time per case.
+- PyYAML is now imported lazily in `contract.py` (via a proxy) so commands that
+  never touch a contract keep a fast startup: `geoarg --version` ~182 ms -> ~120 ms.
+- Chain resolution is still recursive and cached per workspace scan; the
+  engine digest changed, so the five registered cases were re-committed,
+  re-attested and re-anchored at 1.12.0.
+
 ## 1.11.0
 
 Performance and structure pass, no behavior change:

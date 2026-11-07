@@ -59,7 +59,7 @@ No network. Only PyYAML, pypdf and python-docx are required.
 | `geoarg ground <case> --source <paper>` | match every source quote against the source document (PDF, DOCX, HTML, Markdown, plain text), write a grounding ledger, report an acceptance rate; exits non-zero when a declared quote fails (`--allow-partial` only inspects a partial ledger); the legacy `--pdf` still works |
 | `geoarg migrate <case\|dir>` | rewrite the `schema_version` line of the three case YAML files (or `bundle.yaml`) to the current schema, leaving every other byte alone; `--dry-run` reports without writing |
 | `geoarg bundle <dir>` | read `bundle.yaml`, run `judge` per case, and take the weakest required claim as the paper's bundle conclusion; `--json`, `--out`, `--lang` |
-| `geoarg workspace <dir>` | scan every case under `<dir>`: verdicts, argument chains, evidence shared across cases, evidence-id conflicts, drift in committed records; exits non-zero when anything is wrong; `--json`, `--format html`, `--out`, `--lang` |
+| `geoarg workspace <dir>` | scan every case under `<dir>`: verdicts, argument chains, evidence shared across cases, evidence-id conflicts, drift in committed records; `--no-judge` is a fast structural scan that skips verdicts, chains and drift; exits non-zero when anything is wrong; `--json`, `--format html`, `--out`, `--lang` |
 | `geoarg patterns` | list the shipped argument patterns (age bracket, sequence boundary, slip rate) and how to scaffold one with `geoarg new` |
 | `geoarg new <dir> --pattern <name>` | write the three YAML drafts for a pattern (TODO placeholders); `--id` / `--title` / `--claim` override; refuses to overwrite an existing case (`--force`) |
 | `geoarg adopt <notes.md> --out <dir>` | deterministically turn a Markdown outline (`Claim` / `Premises` / `Evidence` / `Tests` sections) into a draft case; every guessed value becomes a TODO |
@@ -77,7 +77,7 @@ No network. Only PyYAML, pypdf and python-docx are required.
 
 - Re-running `commit` only replaces the record; if you already ran `attest` or `anchor`, re-run them in the order commit → attest → anchor before `verify` passes again.
 
-## Trust layer (1.11)
+## Trust layer (1.12)
 
 Before 0.9, `verify` could only compare the case input, engine, verdict, and argument chain. It did not know whether the report handed to a reader came from this commit, and it could not tell whether the ledger had been replaced wholesale. 1.0 adds both:
 
@@ -320,7 +320,7 @@ The field changes reporting and decision value, not the verdict rules:
 - `report` adds a "Counter-evidence records" column to the counter-evidence and prediction tables;
 - `geoarg check` validates the ids (existing and unique); the field is optional, and leaving it out behaves exactly as in 1.9.
 
-## Status and limits (v1.11)
+## Status and limits (v1.12)
 
 - Does not verify the truth of a claim, only the structure, test status, and quote grounding of the argument.
 - Contracts cost effort; that is the price of a checkable argument.

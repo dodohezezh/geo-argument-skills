@@ -243,6 +243,11 @@ def _build_parser() -> argparse.ArgumentParser:
     workspace_parser = sub.add_parser("workspace", help="audit a workspace: every case, argument chains, shared evidence, drift")
     workspace_parser.add_argument("root", help="workspace directory (contains workspace.yaml and/or case directories)")
     workspace_parser.add_argument("--json", action="store_true", help="emit JSON instead of text")
+    workspace_parser.add_argument(
+        "--no-judge",
+        action="store_true",
+        help="fast scan: skip verdicts, argument-chain resolution and drift verification",
+    )
     workspace_parser.add_argument("--format", choices=("md", "html"), default="md", help="report format (default: md; html is a self-contained page)")
     workspace_parser.add_argument("--out", default=None, help="write the workspace report to this path (Markdown, HTML, or JSON with --json)")
     workspace_parser.add_argument(

@@ -378,7 +378,7 @@ def _cmd_bundle(args: argparse.Namespace) -> int:
 def _cmd_workspace(args: argparse.Namespace) -> int:
     from .chain import render_workspace, workspace_report
     from .html import render_workspace_html
-    payload = workspace_report(args.root)
+    payload = workspace_report(args.root, judge_cases=not getattr(args, "no_judge", False))
     if args.json:
         text = json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True)
         if args.out:
