@@ -1,11 +1,11 @@
 {
-  "anchor_sha256": "98b4b43e826d097ced3d25c702f44899e1bfe8ad17b6fa105bc1dfb1ef0ea295",
+  "anchor_sha256": "357c5ef25b45eb557859cbe9bea8eff18c771a89dddb027fe991533dbab64e9c",
   "claim_id": "C1",
-  "created_at": "2026-11-07T13:48:01+00:00",
-  "engine_sha256": "4ec1a7d28a57159ea594b0bc6b83f76d9bd2bc0ef66771c9d7b0f8adaa2c89fe",
+  "created_at": "2026-11-07T13:50:39+00:00",
+  "engine_sha256": "488e31cedc79f923a3189985a7d74b71214e394787a63b472e241051720b7c5f",
   "ledger_count": 2,
-  "ledger_head": "b08f290a6cc9f7429e4e6f5fe2a45e2e9c5dc76934ae3c8f2225f8ba0ea8f368",
+  "ledger_head": "434212c66554f664b11e61cfb6f10e8f90f3b4a2c2ee2d1c5acee00f110a37b8",
   "note": null,
-  "record_sha256": "5ac503f97637f735147263e58b1b39b35bb5e2a4e5ac6ff267aac8ef183f284d",
+  "record_sha256": "45e3e36b428993ad7e42b310898aaf7b000fef592e8a1da3000bb477e9edd74e",
   "schema_version": "geoarg/anchor/0.1"
 }

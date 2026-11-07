@@ -23,6 +23,7 @@ from typing import Any
 
 from .contract import Case
 from .safeio import atomic_write_text
+from .hashing import file_sha256
 
 GROUND_SCHEMA_VERSION = "geoarg/ground/0.3"
 MIN_TEXT_CHARS = 20
@@ -262,7 +263,7 @@ def ground_records(case: Case, source_path: str | Path) -> dict[str, Any]:
         source_entry = {"path": str(relative), "case_relative": True}
     except ValueError:
         source_entry = {"path": str(path), "case_relative": False}
-    source_entry["sha256"] = _sha256(path.read_bytes())
+    source_entry["sha256"] = file_sha256(path) or ""
     source_entry["format"] = path.suffix.lower().lstrip(".") or "unknown"
 
     return {
@@ -316,7 +317,7 @@ def ledger_sha256(case_root: str | Path) -> str | None:
     path = ledger_file(case_root)
     if path is None:
         return None
-    return _sha256(path.read_bytes())
+    return file_sha256(path) or ""
 
 
 def validate_grounding(case: Case, ledger: dict[str, Any] | None) -> tuple[list[str], list[str]]:
@@ -373,7 +374,7 @@ def validate_grounding(case: Case, ledger: dict[str, Any] | None) -> tuple[list[
         if raw:
             path = Path(case.root) / raw if pdf.get("case_relative") else Path(raw)
             if path.is_file():
-                if _sha256(path.read_bytes()) != pdf.get("sha256"):
+                if file_sha256(path) != pdf.get("sha256"):
                     problems.append(f"source document changed since grounding: {raw}; re-run geoarg ground")
             else:
                 warnings.append(

@@ -4,15 +4,15 @@
     "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
   },
   "claim_id": "C1",
-  "committed_at": "2026-11-07T13:48:01+00:00",
+  "committed_at": "2026-11-07T13:50:39+00:00",
   "domain": null,
-  "engine_sha256": "4ec1a7d28a57159ea594b0bc6b83f76d9bd2bc0ef66771c9d7b0f8adaa2c89fe",
+  "engine_sha256": "488e31cedc79f923a3189985a7d74b71214e394787a63b472e241051720b7c5f",
   "flags": [],
   "grounding": {
     "acceptance_rate": 1.0,
     "drafted": 3,
     "grounded": 3,
-    "sha256": "590d5f55828424228ba08fbf8a5b48acb067201fc2f7d2a5029b4f974b26e928"
+    "sha256": "7201daa18ec0be3233ab5978f1b96a215291a4a3d2c721e3cc38d14c9496e3fe"
   },
   "input_sha256": {
     "argument.yaml": "caaa56649d6afb23cad1f14d8602db600edecf650f24be577f2232b1a42e8fa0",

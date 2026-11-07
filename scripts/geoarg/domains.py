@@ -27,6 +27,8 @@ from typing import Any
 
 import yaml
 
+from .hashing import file_sha256
+
 from .contract import ENUMS, EXTENSIBLE_ENUM_KEYS, ContractError
 
 DOMAIN_FILE = "domain.yaml"
@@ -78,7 +80,7 @@ def _patterns(dir_path: Path) -> list[dict[str, Any]]:
                 "evidence": str(data["evidence"]),
                 "test": str(data["test"]),
                 "file": path.name,
-                "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+                "sha256": file_sha256(path) or "",
             }
         )
     names = [row["name"] for row in rows]

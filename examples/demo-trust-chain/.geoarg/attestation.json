@@ -1,6 +1,6 @@
 {
   "claim_id": "C1",
-  "created_at": "2026-11-07T13:48:01+00:00",
+  "created_at": "2026-11-07T13:50:39+00:00",
   "deliverables": [
     {
       "bytes": 5423,
@@ -8,7 +8,7 @@
       "sha256": "d8453b921a0de47ac8e9c98bcf361752e25e45fa6fd95a2e40ff158ed5dcd5af"
     }
   ],
-  "engine_sha256": "4ec1a7d28a57159ea594b0bc6b83f76d9bd2bc0ef66771c9d7b0f8adaa2c89fe",
+  "engine_sha256": "488e31cedc79f923a3189985a7d74b71214e394787a63b472e241051720b7c5f",
   "environment": {
     "geoarg": "1.12.2",
     "platform": "win32",
@@ -16,7 +16,7 @@
   },
   "judgment": [],
   "note": null,
-  "record_sha256": "5ac503f97637f735147263e58b1b39b35bb5e2a4e5ac6ff267aac8ef183f284d",
+  "record_sha256": "45e3e36b428993ad7e42b310898aaf7b000fef592e8a1da3000bb477e9edd74e",
   "rule_version": "geoarg/0.7",
   "schema_version": "geoarg/attestation/0.1"
 }

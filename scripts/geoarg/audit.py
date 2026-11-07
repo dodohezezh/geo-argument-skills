@@ -48,6 +48,7 @@ _ENGINE_FILES = (
     "safeio.py",
     "schemas.py",
     "domains.py",
+    "hashing.py",
 )
 REGISTRY_SCHEMA_VERSION = "geoarg/registry/0.6"
 LEDGER_FILE = "ledger.jsonl"
@@ -58,31 +59,10 @@ ANCHOR_SCHEMA_VERSION = "geoarg/anchor/0.1"
 ATTESTATION_FILE = "attestation.json"
 
 
-def _sha256_bytes(data: bytes) -> str:
-    return hashlib.sha256(data).hexdigest()
+from .hashing import file_sha256, is_text_path, normalized_bytes, sha256_bytes
 
-
-# Files whose bytes may legitimately differ between a Windows CRLF working tree
-# and a clean LF checkout. Digests of these files are computed over LF bytes so
-# a record committed on one machine still verifies on another.
-_TEXT_SUFFIXES = {
-    ".md", ".txt", ".yaml", ".yml", ".json", ".html", ".htm", ".csv",
-    ".py", ".toml", ".cff", ".cfg", ".ini", ".gitignore", ".gitattributes",
-}
-
-
-def _is_text_path(path: Path) -> bool:
-    name = path.name.lower()
-    return path.suffix.lower() in _TEXT_SUFFIXES or name in {".gitignore", ".gitattributes"}
-
-
-def file_sha256(path: Path) -> str | None:
-    if not path.is_file():
-        return None
-    data = path.read_bytes()
-    if _is_text_path(Path(path)):
-        data = data.replace(b"\r\n", b"\n")
-    return _sha256_bytes(data)
+_sha256_bytes = sha256_bytes
+_is_text_path = is_text_path
 
 
 def case_digest(root: Path) -> dict[str, str | None]:
