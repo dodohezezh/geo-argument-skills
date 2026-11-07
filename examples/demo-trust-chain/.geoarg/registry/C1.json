@@ -1,0 +1,45 @@
+{
+  "chain": {
+    "entries": 0,
+    "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+  },
+  "claim_id": "C1",
+  "committed_at": "2026-11-07T13:33:54+00:00",
+  "domain": null,
+  "engine_sha256": "3b2415433830ee27869f9512668114b0d2e7f431e40d6c04eab0d89ecc1a3554",
+  "flags": [],
+  "grounding": {
+    "acceptance_rate": 1.0,
+    "drafted": 3,
+    "grounded": 3,
+    "sha256": "590d5f55828424228ba08fbf8a5b48acb067201fc2f7d2a5029b4f974b26e928"
+  },
+  "input_sha256": {
+    "argument.yaml": "079918f13df56bdedcb60bff81f87ae525300ad7924b547b723a449d522d4c97",
+    "evidence.yaml": "8a5580c39efa899bee53052f069f13a729ce571511f910659738684bcfc2e101",
+    "test.yaml": "7940e2cba6d44fabe74496b12363c7446711173337a8d99533d8499316f0e9cd"
+  },
+  "profile": {
+    "primary": "geochronology",
+    "secondary": []
+  },
+  "reasons": {
+    "hard": [],
+    "pending": [
+      "ceteris paribus condition CP1 is unknown",
+      "ceteris paribus condition CP2 is unknown",
+      "ceteris paribus condition CP3 is unknown",
+      "defeater D1 is unknown",
+      "defeater D2 is unknown",
+      "entailment E1 is untested",
+      "entailment E2 is untested"
+    ],
+    "soft": []
+  },
+  "rule_version": "geoarg/0.7",
+  "schema_version": "geoarg/registry/0.6",
+  "test_status": {},
+  "title": "Paper demo: a dated unconformity from a source PDF",
+  "unbacked": [],
+  "verdict": "UNTESTED"
+}

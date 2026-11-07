@@ -19,23 +19,29 @@
 
 判决是格，不是分数。`UNTESTED` 和 `UNDETERMINED` 是合法且常见的状态，它们比一个漂亮的置信度更接近地质学的真实情况。
 
+> **状态：研究原型。** 引擎与信任链有自动测试（272 个）；方法本身尚未做外部实证评估，示例只演示契约与引擎，不代表方法已被验证。适合自检、教学与评审辅助，不适合直接当“权威结论”引用。术语表：[GLOSSARY.md](GLOSSARY.md)。English: [README.en.md](README.en.md)。
+
 ## 快速开始
 
+先取得仓库并进入根目录（GitHub 页面上的 Clone 地址就是 `git clone` 的 URL）；下文命令都在仓库根目录执行。
+
 ```bash
-git clone <your-fork-url> geo-argument-skills
-cd geo-argument-skills
-pip install -e ".[schema]"        # 装 jsonschema 后 `geoarg schema --validate` 可用；可选
-geoarg check examples/south-atlantic
-geoarg judge examples/south-atlantic
+python -m pip install -e ".[schema]"     # jsonschema 用于 `schema --validate`；可选
+geoarg --version                         # 期望：geoarg 1.12.1
+geoarg check examples/south-atlantic     # 期望：OK C1 (0 problem(s))
+geoarg judge examples/south-atlantic     # 期望：UNTESTED
 geoarg independence examples/south-atlantic
 geoarg hit-set examples/south-atlantic
-`geoarg workspace examples` 也能跑：仓库根下没有 `workspace.yaml`，所以只解析出一条 `basement-age → basement-age` 的链（来自 workspace-demo 的相对路径解析），没有跨案例证据冲突；`examples` 本身只做结构检查。
+geoarg workspace examples
 geoarg workspace examples/workspace-demo
 geoarg ground examples/paper-demo --source examples/paper-demo/paper.pdf
+geoarg verify examples/demo-trust-chain   # 期望：OK（仓库内置演示信任链）
 geoarg report examples/south-atlantic
 geoarg card examples/south-atlantic --for reviewer --lang zh
 geoarg schema --list
 ```
+
+`geoarg workspace examples` 也会跑：仓库根下没有 `workspace.yaml`，所以只解析出一条 `basement-age → basement-age` 的链（来自 workspace-demo 的相对路径解析），没有跨案例证据冲突；`examples` 本身只做结构检查。
 
 无需联网。`geoarg` 只依赖 PyYAML、pypdf 与 python-docx，判决完全由契约和引擎决定。
 
@@ -104,14 +110,14 @@ geoarg doctor                       # 引擎、依赖、已装技能一起自检
 
 `verify` 防的是无意漂移：registry 记录、台账与锚点都在案例目录里，都能被重写；重新运行 `commit` 会追加新记录；若已经 `attest` 或 `anchor`，要按 commit → attest → anchor 的顺序重跑，`verify` 才重新通过。要防伪造，需要把锚点文件抄到仓库外或交给外部时间戳服务；仓库只提供锚定所需的字节，不替你保管它。
 
-## 可信层（1.12）
+## 可信层（1.12.1）
 
 0.9 之前，`verify` 只能比对案例输入、引擎、判决与论证链；它不知道交付给读者的报告是不是由这次提交生成的，也不知道台账是否被整体替换。1.0 把这两件事补上：
 
 1. **交付物绑定。** `commit` 之后运行 `geoarg attest <case> --judgment-file <text>`，引擎把 `report.*`、`card.*` 与评述文件的内容哈希、引擎/规则版本、运行环境写进 `.geoarg/attestation.json`，并追加一条 `attestation` 台账。改了报告而没重新 `attest`，`verify` 报 `deliverable changed since attestation`；换了引擎而没重新 `attest`，报 `engine changed since attestation`。
-把这份文件抄到仓库之外（邮件、论文附件、机构存档、时间戳服务）之后，用 `geoarg verify <case> --anchor <file>` 读那份副本，检查台账头是否仍与它一致；普通 `verify` 只检查本地锚点与台账自洽。
+2. **可带出的锚点。** 把 `anchor.json` 抄到仓库之外（邮件、论文附件、机构存档、时间戳服务）之后，用 `geoarg verify <case> --anchor <file>` 读那份副本，检查台账头是否仍与它一致；普通 `verify` 只检查本地锚点与台账自洽。
 3. **原子写入与锁。** `commit`、`attest`、`anchor` 与接地台账都先写临时文件再 `os.replace`，同一案例目录加锁，避免半写文件与并发覆盖。
-- schema 是文档与第二意见；命名前缀比引擎宽松，不强制 `arg.` 之类前缀。
+4. **schema 是文档与第二意见。** 命名前缀比引擎宽松，不强制 `arg.` 之类前缀。
 5. **多格式接地。** 源文档除 PDF 外支持 DOCX、HTML、Markdown、纯文本；页码语义只对 PDF 成立，其他格式共用第 1 页。
 
 这四个信任级别的关系是：结构自洽（`check`）→ 记录可复核（`commit` / `verify`）→ 交付物可追溯（`attest`）→ 台账头可对外声明（`anchor`）。每一级只在前一级之上加一条可检查的承诺；越过 `anchor` 的“这是真的”不在本仓库射程内。设计参考见 [docs/prior-art.md](docs/prior-art.md)。
@@ -242,7 +248,7 @@ geo-argument-skills/
 
 `examples/south-atlantic` 是一条板块重建论证的完整契约：3 条前提、5 个判废条件、2 个蕴含、7 个检验。它的引用是占位，目的是让你看到契约的形状，而不是让你引用它的结论。预期行为：`check` 干净、判决 `UNTESTED`、`n_eff = 1.2 / 3`、`hit-set` 列出 13 条单事件结果。
 
-`examples/paper-demo` 是接地门的演示：一份合成 PDF（三页，含三条引文），三条转录级证据带原文锚点，台账已提交。预期行为：`geoarg ground` 验收率 1.000，三页文本层可读，`check` 干净。
+`examples/paper-demo` 是接地门的演示：一份合成 PDF（三页，含三条引文），三条转录级证据带原文锚点，演示信任链（commit → attest → anchor）随 `examples/demo-trust-chain` 提交；`geoarg verify examples/demo-trust-chain` 在干净检出上应当通过。预期行为：`geoarg ground` 验收率 1.000，三页文本层可读，`check` 干净。
 
 `examples/workspace-demo` 是论证链与工作区的演示：两条论证（`basement-age` 与 `cover-age`）用 `workspace.yaml` 连起来，`cover-age` 的派生前提指向 `basement-age`。预期行为：`geoarg judge examples/workspace-demo/cover-age` 为 `UNTESTED`，派生前提显示为「被引用的论证未检验」；`geoarg workspace examples/workspace-demo` 显示一条已解析的链，结论「结构一致」。这两个案例未提交，因此没有登记表与锚点。
 
@@ -354,7 +360,7 @@ inference:
 - `report` 的反面证据表与推论表各多一列「反面证据记录」；
 - `geoarg check` 校验 id 存在且行内不重复；字段可选，不填时行为与 1.9 相同。
 
-## 局限（v1.12）
+## 局限（v1.12.1）
 
 - **不验证结论的真假**，只验证论证的结构、检验状态与引文是否落地。地质学的真值不在这个仓库的射程内。
 - **契约有成本。** 填一条论证需要几条到几十条前提，这是这个方法的代价，也是它比“直接写结论”慢的原因。

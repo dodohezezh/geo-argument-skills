@@ -52,3 +52,6 @@ acceptance rate: 0.667 (2/3 drafted quotes grounded)
 ## 说明
 
 `paper.pdf` 是脚本生成的合成文件，不含任何真实出版物内容。它的用途是让引文核对在没有真实论文时也能端到端跑通；真实论文的验收测试在拿到 PDF 之后单独做。
+
+`examples/demo-trust-chain` 是同一份契约加已提交演示信任链的副本；本目录只保留契约
+与接地台账（`.geoarg/ground/C1.json`），不包含 registry/ledger/attestation/anchor。

@@ -1,0 +1,45 @@
+{
+  "acceptance_rate": 1.0,
+  "claim_id": "C1",
+  "counts": {
+    "grounded": 3,
+    "no-locator": 0,
+    "not-found": 0,
+    "not-groundable": 0,
+    "page-mismatch": 0
+  },
+  "drafted": 3,
+  "extracted": {
+    "chars": 185,
+    "extractor": "pypdf 6.21.4",
+    "pages": 3,
+    "text_layer": true
+  },
+  "grounded": 3,
+  "pdf": {
+    "case_relative": true,
+    "path": "paper.pdf",
+    "sha256": "9391b6b9c4e83d5d0ae65bf384603080f5ff926f0784e5b89ead00955cb1faee"
+  },
+  "records": {
+    "ev.dated.zircon": {
+      "found_page": 1,
+      "page": 1,
+      "quote_sha256": "008845b5e26038bae3d56eb39524ed963d104b1969a7ff3d2fce25c441f76333",
+      "status": "grounded"
+    },
+    "ev.extent.mapping": {
+      "found_page": 2,
+      "page": 2,
+      "quote_sha256": "76458e66dc52e326f6161d7db0b099095ff18a6a0dc4bea3771fdd5bbb2d3a01",
+      "status": "grounded"
+    },
+    "ev.flood.silt": {
+      "found_page": 3,
+      "page": 3,
+      "quote_sha256": "9e9882332073c3267d427b19a1c3e952e8c95481d6073c46b46e1c3f2333111d",
+      "status": "grounded"
+    }
+  },
+  "schema_version": "geoarg/ground/0.3"
+}

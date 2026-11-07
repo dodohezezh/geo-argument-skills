@@ -13,4 +13,4 @@ as accepted evidence.
 Reports render to Word (.docx) by default and to Markdown on request.
 """
 
-__version__ = "1.12.0"
+__version__ = "1.12.1"

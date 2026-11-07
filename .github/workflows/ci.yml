@@ -4,13 +4,20 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: ["3.12"]
+        python-version: ["3.11", "3.12"]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -19,7 +26,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install
         run: |
-          python -m pip install --upgrade pip
+          python -m pip install --upgrade pip setuptools wheel
           python -m pip install -e ".[schema]"
       - name: Unit tests
         run: python -m unittest discover -s scripts/tests
@@ -27,14 +34,15 @@ jobs:
         run: |
           geoarg check examples/south-atlantic
           geoarg ground examples/paper-demo --source examples/paper-demo/paper.pdf
+          geoarg verify examples/demo-trust-chain
           geoarg schema --list
       - name: Build wheel and check bundled payload
         run: |
-          python -m pip wheel . -w dist --no-deps --no-build-isolation
-          python -c "import glob, zipfile; wheel = glob.glob('dist/*.whl')[0]; names = zipfile.ZipFile(wheel).namelist(); assert any('geoarg/_skills/geology/geo-arg-register/SKILL.md' in n for n in names), names[:5]; assert 'geoarg/_schema/argument.schema.json' in names, 'schema not packaged'; print('wheel contains skills and schemas')"
+          python -m pip wheel . -w dist --no-deps
+          python -c "import glob, zipfile; wheel = sorted(glob.glob('dist/*.whl'))[-1]; names = zipfile.ZipFile(wheel).namelist(); assert any('geoarg/_skills/geology/geo-arg-register/SKILL.md' in n for n in names), names[:5]; assert 'geoarg/_schema/argument.schema.json' in names, 'schema not packaged'; print('wheel contains skills and schemas')"
       - name: Install the wheel and run it
         run: |
-          python -m pip install --no-deps --force-reinstall dist/*.whl
+          python -c "import glob, subprocess, sys; wheel = sorted(glob.glob('dist/*.whl'))[-1]; sys.exit(subprocess.call([sys.executable, '-m', 'pip', 'install', '--no-deps', '--force-reinstall', wheel]))"
           geoarg --version
           geoarg schema --list
           geoarg check examples/paper-demo

@@ -1,0 +1,43 @@
+schema_version: geoarg/0.7
+records:
+- id: T1
+  name: Re-date the surface at a second section
+  checks:
+  - CP1
+  - D1
+  method:
+    type: field-check
+    description: Sample a second section and date the same surface.
+  blind:
+    is_blind: false
+  discriminating_power: high
+  status: planned
+  cost: 4
+- id: T2
+  name: Map the surface between sections
+  checks:
+  - CP2
+  - E1
+  method:
+    type: geometric-consistency
+    description: Walk the contact in the field between the two measured sections.
+  blind:
+    is_blind: false
+  discriminating_power: medium
+  status: planned
+  cost: 3
+- id: T3
+  name: Check sample position against surface elevation
+  checks:
+  - CP3
+  - D2
+  - E2
+  method:
+    type: geometric-consistency
+    description: Compare the dated sample's stratigraphic position with the mapped
+      surface.
+  blind:
+    is_blind: false
+  discriminating_power: medium
+  status: planned
+  cost: 2

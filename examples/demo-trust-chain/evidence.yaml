@@ -1,0 +1,65 @@
+schema_version: geoarg/0.7
+records:
+- id: ev.dated.zircon
+  kind: measurement
+  layer: L1
+  statement: A zircon U-Pb age of 12.3 Ma dates the basal unconformity.
+  source:
+    citation: Synthetic et al. (2026), paper-demo fixture
+  coverage:
+    spatial_extent: one measured section
+    coverage_fraction: 0.15
+    detectability: 0.9
+  independence:
+    family: geochronology
+    independence_class: method
+    derived_from: []
+    shared_sources: []
+  verification:
+    level: transcription
+  status: accepted
+  source_locator:
+    page: 1
+    quote: The basal unconformity is dated at 12.3 Ma by zircon U-Pb.
+- id: ev.extent.mapping
+  kind: observation
+  layer: L1
+  statement: The unconformity is traceable across the basin for 180 km.
+  source:
+    citation: Synthetic et al. (2026), paper-demo fixture
+  coverage:
+    spatial_extent: basin-scale map
+    coverage_fraction: 0.7
+    detectability: 0.8
+  independence:
+    family: field-mapping
+    independence_class: physical
+    derived_from: []
+    shared_sources: []
+  verification:
+    level: transcription
+  status: accepted
+  source_locator:
+    page: 2
+    quote: The unconformity is traceable across the basin for 180 km.
+- id: ev.flood.silt
+  kind: observation
+  layer: L1
+  statement: Bioturbated silts above the surface record a marine flooding event.
+  source:
+    citation: Synthetic et al. (2026), paper-demo fixture
+  coverage:
+    spatial_extent: one logged section
+    coverage_fraction: 0.4
+    detectability: 0.6
+  independence:
+    family: sedimentology
+    independence_class: physical
+    derived_from: []
+    shared_sources: []
+  verification:
+    level: transcription
+  status: accepted
+  source_locator:
+    page: 3
+    quote: Bioturbated silts above the surface indicate a marine flooding event.

@@ -7,4 +7,14 @@ dist/
 .geoarg/
 !examples/paper-demo/.geoarg/
 !examples/paper-demo/.geoarg/**
+!examples/demo-trust-chain/.geoarg/
+!examples/demo-trust-chain/.geoarg/**
+.lock
 report.md
+!examples/demo-trust-chain/report.md
+report.docx
+report.*.docx
+report.html
+card.*.md
+card.md
+figures/

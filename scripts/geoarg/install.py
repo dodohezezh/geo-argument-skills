@@ -12,7 +12,7 @@ import shutil
 import sys
 from pathlib import Path
 
-REQUIRED_ENGINE = "1.12.0"
+REQUIRED_ENGINE = "1.12.1"
 
 
 def bundled_root() -> Path | None:
@@ -158,7 +158,7 @@ def environment() -> list[dict]:
             ok, detail = True, "importable"
         except ImportError:
             ok = False
-            detail = "missing (pip install geoarg[report])" if module == "docx" else "missing (pip install geoarg)"
+            detail = "missing (pip install python-docx)" if module == "docx" else "missing (pip install python-docx)"
         checks.append({"name": label, "ok": ok, "detail": detail})
 
     try:

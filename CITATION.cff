@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use this software in academic work, please cite it as below."
+title: "geoarg: a deterministic argument auditor for geological claims"
+abstract: "geoarg compiles a geological argument into a structured contract, judges it with deterministic rules, grounds transcription quotes against the source document, and binds deliverables and ledger checkpoints so the reasoning can be handed off and re-checked."
+type: software
+authors:
+  - name: "GeoArg contributors"
+version: "1.12.1"
+date-released: "2026-11-07"
+license: MIT
+repository: ""
+keywords:
+  - geology
+  - argumentation
+  - reproducibility
+  - provenance
+  - research software
+  - trust

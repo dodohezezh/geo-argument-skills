@@ -1,0 +1,99 @@
+schema_version: geoarg/0.7
+id: paper-demo
+title: 'Paper demo: a dated unconformity from a source PDF'
+domain: plate-tectonics
+profile:
+  primary: geochronology
+  rationale: 主张的可信度主要取决于年代学标定与不整合面的解释。
+claim:
+  id: C1
+  statement: The basal unconformity is a 12.3 Ma sequence boundary.
+  kind: timing
+  layer: L1
+  scope: X basin, one measured section plus regional mapping
+premises:
+- id: P1
+  statement: A zircon U-Pb age of 12.3 Ma dates the basal unconformity.
+  kind: evidenced
+  layer: L1
+  status: supported
+  evidence_refs:
+  - ev.dated.zircon
+- id: P2
+  statement: The unconformity is traceable across the basin for 180 km.
+  kind: evidenced
+  layer: L1
+  status: supported
+  evidence_refs:
+  - ev.extent.mapping
+- id: P3
+  statement: Bioturbated silts above the surface record a marine flooding event.
+  kind: evidenced
+  layer: L1
+  status: supported
+  evidence_refs:
+  - ev.flood.silt
+inference:
+  rule_id: W.dated-surface
+  warrant: A radiometric date on a mapped surface fixes its age where the dated material
+    belongs to the surface and the section is not structurally repeated.
+  cp:
+  - id: CP1
+    statement: The dated grains come from the surface itself, not from reworked material.
+    cp_type: methodological
+    state: unknown
+    test_ref: T1
+  - id: CP2
+    statement: No fault repeats or omits the dated interval.
+    cp_type: structural
+    state: unknown
+    test_ref: T2
+  - id: CP3
+    statement: The dated sample sits within the mapped surface everywhere the claim
+      extends.
+    cp_type: methodological
+    state: unknown
+    test_ref: T3
+  defeaters:
+  - id: D1
+    type: rebutting
+    statement: The dated grains are detrital and predate the surface.
+    severity: fatal
+    state: unknown
+    test_ref: T1
+  - id: D2
+    type: undercutting
+    statement: The mapped surface is a facies boundary, not a time surface.
+    severity: fatal
+    state: unknown
+    test_ref: T3
+entailments:
+- id: E1
+  statement: The surface is mappable between the two measured sections.
+  kind: geometric-consistency
+  risk: medium
+  status: untested
+  test_ref: T2
+- id: E2
+  statement: No younger unit sits below the mapped surface.
+  kind: temporal-pattern
+  risk: high
+  status: untested
+  test_ref: T3
+dependencies:
+  evidence_families:
+  - geochronology
+  - field-mapping
+  - sedimentology
+  shared_calibration: []
+  depends_on: []
+gaps:
+- kind: cannot-express
+  description: The contract cannot record how far the dated sample sits from the mapped
+    surface.
+  severity: minor
+audit:
+  author: geoarg demo
+  created: '2026-10-31'
+  updated: '2026-10-31'
+  version: '0.2'

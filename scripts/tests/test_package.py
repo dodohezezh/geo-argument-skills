@@ -29,6 +29,12 @@ def make_case(tmp: Path, *, attested: bool = True) -> Path:
         title="Packaging demo",
         claim="A flooding surface is a 12.3 Ma sequence boundary.",
     )
+    # `geoarg commit` refuses draft placeholders, so this packaging fixture
+    # replaces the scaffold markers with inert text before committing.
+    for name in ("argument.yaml", "evidence.yaml", "test.yaml"):
+        path = root / name
+        text = path.read_text(encoding="utf-8")
+        path.write_text(text.replace("TODO", "draft fixture"), encoding="utf-8")
     (root / "report.md").write_text("# Report\n\nA demo deliverable for packaging.\n", encoding="utf-8")
     assert main(["commit", str(root)]) == 0
     if attested:

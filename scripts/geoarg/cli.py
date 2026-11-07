@@ -78,15 +78,14 @@ def main(argv: list[str] | None = None) -> int:
         from .judge import judge
         problems = validate(case)
         warnings: list[str] = []
+        from .draft import draft_markers
+        markers = draft_markers(case)
         if args.profile == "draft":
             problems, draft_warnings = split_draft(problems)
             warnings.extend(draft_warnings)
-            for filename in ("argument.yaml", "evidence.yaml", "test.yaml"):
-                todo_path = case.root / filename
-                if todo_path.exists():
-                    count = todo_path.read_text(encoding="utf-8").count("TODO")
-                    if count:
-                        warnings.append(f"{filename}: {count} TODO marker(s) left to fill")
+            warnings.extend(f"draft placeholder: {marker}" for marker in markers)
+        else:
+            problems.extend(f"draft placeholder: {marker}" for marker in markers)
         result = judge(case)
         problems.extend(f"unbacked state: {item}" for item in result["unbacked"])
         warnings.extend(flag for flag in result["flags"] if flag.startswith("derived premise"))
@@ -231,11 +230,18 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.cmd == "commit":
         from .audit import commit
+        from .draft import draft_markers
         problems = validate(case)
         if problems:
             for problem in problems:
                 print(f"PROBLEM: {problem}")
             print("refusing to commit an invalid contract", file=sys.stderr)
+            return 2
+        markers = draft_markers(case)
+        if markers:
+            for marker in markers:
+                print(f"PROBLEM: draft placeholder: {marker}")
+            print("refusing to commit a draft contract: fill the TODO placeholders first", file=sys.stderr)
             return 2
         try:
             record, path = commit(case.root, args.registry)

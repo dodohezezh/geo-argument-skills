@@ -1,5 +1,28 @@
 # Changelog
 
+## 1.12.1 - publication pass
+
+- **Draft placeholder gate.** Contracts produced by `geoarg new` / `geoarg adopt`
+  are valid YAML with `TODO` placeholders. `check` now reports each placeholder
+  as a problem in the strict profile (and as a warning in `--profile draft`), and
+  `commit` refuses a contract that still contains them. A scaffold can no longer
+  be committed as if it were a finished argument.
+- **Committed demo trust chain.** `examples/demo-trust-chain` now ships a committed
+  record, ledger, attestation, anchor and `report.md`, so a fresh clone can run
+  `geoarg verify examples/demo-trust-chain` successfully.
+- **CI actually runnable.** The workflow installs `setuptools`/`wheel`, builds the
+  wheel without `--no-build-isolation`, installs it through Python instead of a
+  shell glob, tests Python 3.11 and 3.12 on Linux and Windows, and verifies the
+  demo case.
+- **Publication metadata and docs.** `CITATION.cff`, `CONTRIBUTING.md`,
+  `SECURITY.md`, issue templates, `authors`/`keywords`/`classifiers` in
+  `pyproject.toml`, a runnable README quickstart with expected output, fixed
+  trust-layer list numbering, eight (not seven) schemas, and an English
+  "Install as a project" section.
+- `geoarg doctor` no longer suggests the nonexistent `geoarg[report]` extra.
+
+No engine-digest change in this release; committed cases remain valid.
+
 ## 1.12.0 - workspace cache, fast mode, lazy PyYAML
 
 - `geoarg workspace` now loads each case once and shares the loaded cases while

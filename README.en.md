@@ -19,19 +19,23 @@ Two agent skills plus a small engine:
 
 The verdict is a lattice, not a score. `UNTESTED` and `UNDETERMINED` are legal and common; they are closer to geology than a confident number.
 
+> **Status: research prototype.** The engine and trust chain are covered by automated tests (272); the method itself has not been empirically evaluated outside the bundled fixtures. The examples demonstrate contracts and the engine, not that the method works. Use it for self-checks, teaching and review support, not as an authoritative conclusion. Chinese: [README.md](README.md).
+
 ## Quickstart
 
+Clone or download the repository and run these commands from its root.
+
 ```bash
-git clone <your-fork-url> geo-argument-skills
-cd geo-argument-skills
-pip install -e ".[schema]"        # jsonschema enables `geoarg schema` instance checks; optional
-geoarg check examples/south-atlantic
-geoarg judge examples/south-atlantic
+python -m pip install -e ".[schema]"     # jsonschema enables `schema --validate`; optional
+geoarg --version                         # expected: geoarg 1.12.1
+geoarg check examples/south-atlantic     # expected: OK C1 (0 problem(s))
+geoarg judge examples/south-atlantic     # expected: UNTESTED
 geoarg independence examples/south-atlantic
 geoarg hit-set examples/south-atlantic
 geoarg workspace examples
 geoarg workspace examples/workspace-demo
 geoarg ground examples/paper-demo --source examples/paper-demo/paper.pdf
+geoarg verify examples/demo-trust-chain   # expected: OK (a demo trust chain ships in the repo)
 geoarg report examples/south-atlantic
 geoarg card examples/south-atlantic --for reviewer --lang zh
 geoarg schema --list
@@ -39,6 +43,20 @@ python -m unittest discover -s scripts/tests
 ```
 
 No network. Only PyYAML, pypdf and python-docx are required.
+
+## Install as a project
+
+The engine and both skills ship as one package. After installing, copy the skill directories into your agent host:
+
+```bash
+pip install .
+geoarg install-skills              # installs into existing ~/.dsh/skills, ~/.claude/skills, ./.dsh/skills, ./.claude/skills
+geoarg install-skills --dest <dir>  # or an explicit directory (repeatable)
+geoarg install-skills --check       # compare installed copies with the packaged ones
+geoarg doctor                       # engine, dependencies and installed skills in one check
+```
+
+Both skills preflight with `geoarg --version`: stop if the engine is missing or older than 1.12. The wheel bundles the skills (`geoarg/_skills`), so pip installs do not need the repository directory.
 
 ## Commands
 
@@ -77,7 +95,7 @@ No network. Only PyYAML, pypdf and python-docx are required.
 
 - Re-running `commit` only replaces the record; if you already ran `attest` or `anchor`, re-run them in the order commit → attest → anchor before `verify` passes again.
 
-## Trust layer (1.12)
+## Trust layer (1.12.1)
 
 Before 0.9, `verify` could only compare the case input, engine, verdict, and argument chain. It did not know whether the report handed to a reader came from this commit, and it could not tell whether the ledger had been replaced wholesale. 1.0 adds both:
 
@@ -320,7 +338,7 @@ The field changes reporting and decision value, not the verdict rules:
 - `report` adds a "Counter-evidence records" column to the counter-evidence and prediction tables;
 - `geoarg check` validates the ids (existing and unique); the field is optional, and leaving it out behaves exactly as in 1.9.
 
-## Status and limits (v1.12)
+## Status and limits (v1.12.1)
 
 - Does not verify the truth of a claim, only the structure, test status, and quote grounding of the argument.
 - Contracts cost effort; that is the price of a checkable argument.
@@ -333,7 +351,7 @@ The field changes reporting and decision value, not the verdict rules:
 - Workspace drift covers cases with a committed record only; uncommitted cases show structural problems. The evidence registry compares content hashes for the same id and does not prove common provenance.
 - The registry record, ledger, and anchor can all be rewritten: `verify` detects post-commit drift, and re-running `commit` clears it. The `attest` and `anchor` commands supply checkable bindings and bytes to copy out of the repository; no timestamp service, transparency log, or signing identity is built in, and custody of the anchor file is the user's job.
 - Deliverable binding covers content hashes only. `attest` proves "these files came from this commit and have not changed since"; it does not prove the commentary is faithful, nor that the same report was not copied elsewhere. The default set is `report.*` and `card.*`; other files need explicit `--include`.
-- The seven shipped schemas are a second opinion: they validate document shape, while `contract.validate` remains authoritative; when they disagree, the engine wins.
+- The eight shipped schemas are a second opinion: they validate document shape, while `contract.validate` remains authoritative; when they disagree, the engine wins.
 - The append-only ledger resists local edits only: the whole `.geoarg/ledger.jsonl` can still be replaced; lines written before 1.2 have no per-entry `sha256`: editing their `record_sha256` breaks the next line's `prev`, but edits to their other fields are not detected (1.2+ lines are fully checked); compare the ledger with an anchor kept elsewhere using `geoarg verify <case> --anchor <file>` (plain `verify` checks local sidecars only).
 - Result binding covers results that fit a registered rule. Binary outcomes, interval estimates, and relative changes can be computed; tests involving model selection, multiple-comparison correction, or subjective ratings still need a typed `status`. The engine performs no statistical inference.
 - `migrate` rewrites only the schema line. Legacy string `result.value` fields and missing `pass_rule`s must be fixed by hand; `check` points at them after migration.
