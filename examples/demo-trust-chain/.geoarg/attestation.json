@@ -1,22 +1,22 @@
 {
   "claim_id": "C1",
-  "created_at": "2026-11-07T13:33:54+00:00",
+  "created_at": "2026-11-07T13:45:42+00:00",
   "deliverables": [
     {
       "bytes": 5423,
       "path": "report.md",
-      "sha256": "4120b56be4251dd909c4607b517452afbf5bb53fcbcff41b9821affb342a83e1"
+      "sha256": "d8453b921a0de47ac8e9c98bcf361752e25e45fa6fd95a2e40ff158ed5dcd5af"
     }
   ],
-  "engine_sha256": "3b2415433830ee27869f9512668114b0d2e7f431e40d6c04eab0d89ecc1a3554",
+  "engine_sha256": "c2da719bd5b78eb6a75b2aeecb3a22e4812bdc6361333eb65e87e1b732c65970",
   "environment": {
-    "geoarg": "1.12.0",
+    "geoarg": "1.12.1",
     "platform": "win32",
     "python": "3.12.14"
   },
   "judgment": [],
   "note": null,
-  "record_sha256": "03f5a959ccca3790c7fa70b003b3856dda5bd19ebde6a05bf5b6253fc81191d6",
+  "record_sha256": "95b4180ff8825dadf34a4e3f153c78de075520d9da52afe495f1b70623c37c60",
   "rule_version": "geoarg/0.7",
   "schema_version": "geoarg/attestation/0.1"
 }

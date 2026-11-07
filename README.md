@@ -27,7 +27,7 @@
 
 ```bash
 python -m pip install -e ".[schema]"     # jsonschema 用于 `schema --validate`；可选
-geoarg --version                         # 期望：geoarg 1.12.1
+geoarg --version                         # 期望：geoarg 1.12.2
 geoarg check examples/south-atlantic     # 期望：OK C1 (0 problem(s))
 geoarg judge examples/south-atlantic     # 期望：UNTESTED
 geoarg independence examples/south-atlantic
@@ -110,7 +110,7 @@ geoarg doctor                       # 引擎、依赖、已装技能一起自检
 
 `verify` 防的是无意漂移：registry 记录、台账与锚点都在案例目录里，都能被重写；重新运行 `commit` 会追加新记录；若已经 `attest` 或 `anchor`，要按 commit → attest → anchor 的顺序重跑，`verify` 才重新通过。要防伪造，需要把锚点文件抄到仓库外或交给外部时间戳服务；仓库只提供锚定所需的字节，不替你保管它。
 
-## 可信层（1.12.1）
+## 可信层（1.12.2）
 
 0.9 之前，`verify` 只能比对案例输入、引擎、判决与论证链；它不知道交付给读者的报告是不是由这次提交生成的，也不知道台账是否被整体替换。1.0 把这两件事补上：
 
@@ -360,7 +360,7 @@ inference:
 - `report` 的反面证据表与推论表各多一列「反面证据记录」；
 - `geoarg check` 校验 id 存在且行内不重复；字段可选，不填时行为与 1.9 相同。
 
-## 局限（v1.12.1）
+## 局限（v1.12.2）
 
 - **不验证结论的真假**，只验证论证的结构、检验状态与引文是否落地。地质学的真值不在这个仓库的射程内。
 - **契约有成本。** 填一条论证需要几条到几十条前提，这是这个方法的代价，也是它比“直接写结论”慢的原因。

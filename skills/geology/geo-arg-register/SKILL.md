@@ -17,7 +17,7 @@ Write the contract to be recomputable, not persuasive. The verdict is computed b
 
 ## Preflight
 
-Run `geoarg --version` before anything else. If the command is missing, stop and tell the user the engine is not installed; do not compute verdicts, effective evidence counts, or acceptance rates by hand. If the version is older than 1.12.1, ask the user to upgrade before continuing.
+Run `geoarg --version` before anything else. If the command is missing, stop and tell the user the engine is not installed; do not compute verdicts, effective evidence counts, or acceptance rates by hand. If the version is older than 1.12.2, ask the user to upgrade before continuing.
 
 Starting from a paper or a draft? `geoarg adopt notes.md --out <case>` writes a draft case and `geoarg check <case> --profile draft --explain` lints it. Starting from a question? `geoarg patterns` lists the shipped skeletons and `geoarg new <case> --pattern <name>` writes one. Neither replaces the strict profile.
 

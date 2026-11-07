@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.12.2 - stable digests across checkouts
+
+- Digest computation now normalizes CRLF to LF for text files, so `case_digest`, `engine_digest`, attestation digests and evidence-package digests are identical on a Windows checkout and on a clean clone. Binary sources (PDF/DOCX) stay byte-exact.
+- Re-signed the committed demo trust chain and the five maintained cases under the normalized digests.
+- Evidence packages produced before 1.12.2 can report a changed deliverable or record when verified from a checkout with different line endings; regenerate the package or re-sign the case.
+
 ## 1.12.1 - publication pass
 
 - **Draft placeholder gate.** Contracts produced by `geoarg new` / `geoarg adopt`

@@ -62,10 +62,27 @@ def _sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+# Files whose bytes may legitimately differ between a Windows CRLF working tree
+# and a clean LF checkout. Digests of these files are computed over LF bytes so
+# a record committed on one machine still verifies on another.
+_TEXT_SUFFIXES = {
+    ".md", ".txt", ".yaml", ".yml", ".json", ".html", ".htm", ".csv",
+    ".py", ".toml", ".cff", ".cfg", ".ini", ".gitignore", ".gitattributes",
+}
+
+
+def _is_text_path(path: Path) -> bool:
+    name = path.name.lower()
+    return path.suffix.lower() in _TEXT_SUFFIXES or name in {".gitignore", ".gitattributes"}
+
+
 def file_sha256(path: Path) -> str | None:
     if not path.is_file():
         return None
-    return _sha256_bytes(path.read_bytes())
+    data = path.read_bytes()
+    if _is_text_path(Path(path)):
+        data = data.replace(b"\r\n", b"\n")
+    return _sha256_bytes(data)
 
 
 def case_digest(root: Path) -> dict[str, str | None]:

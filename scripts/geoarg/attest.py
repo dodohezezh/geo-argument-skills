@@ -29,6 +29,7 @@ from .audit import (
     canonical_sha256,
     committed_record,
     engine_digest,
+    file_sha256,
     ledger_entries,
     record_sha256,
 )
@@ -99,11 +100,10 @@ def _entry(root: Path, path: Path) -> dict[str, Any]:
         recorded = resolved.relative_to(root.resolve()).as_posix()
     except ValueError:
         recorded = resolved.as_posix()
-    data = path.read_bytes()
     return {
         "path": recorded,
-        "sha256": hashlib.sha256(data).hexdigest(),
-        "bytes": len(data),
+        "sha256": file_sha256(path),
+        "bytes": path.stat().st_size,
     }
 
 
@@ -256,6 +256,6 @@ def attestation_problems(root: Path, record: dict[str, Any], require: bool = Fal
                 path = root / path
             if not path.is_file():
                 problems.append(f"{label} missing since attestation: {recorded_path}")
-            elif hashlib.sha256(path.read_bytes()).hexdigest() != entry.get("sha256"):
+            elif file_sha256(path) != entry.get("sha256"):
                 problems.append(f"{label} changed since attestation: {recorded_path}")
     return problems
