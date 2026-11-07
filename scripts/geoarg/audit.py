@@ -93,7 +93,7 @@ def engine_digest() -> str:
     package = Path(__file__).resolve().parent
     parts = []
     for name in _ENGINE_FILES:
-        parts.append(_sha256_bytes((package / name).read_bytes()))
+        parts.append(file_sha256(package / name) or "")
     return _sha256_bytes("".join(parts).encode("ascii"))
 
 
