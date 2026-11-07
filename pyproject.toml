@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "geoarg"
-version = "1.12.2"
+version = "1.12.3"
 description = "Deterministic contract engine for geological arguments."
 readme = "README.en.md"
 authors = [{ name = "GeoArg contributors" }]

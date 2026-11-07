@@ -18,6 +18,17 @@ EXAMPLES = REPO / "examples"
 DOMAIN_DEMO = EXAMPLES / "domain-demo"
 
 
+def canonical(path):
+    """A comparison key that ignores Windows 8.3 short-name aliases.
+
+    ``tempfile.gettempdir()`` can return the short ``RUNNER~1`` form on Windows
+    CI runners, while ``Path.resolve`` expands it to the long form. Comparing
+    the canonical paths keeps the test about pack discovery, not about which
+    spelling of the same directory the platform happened to hand us.
+    """
+    return os.path.normcase(os.path.realpath(str(path)))
+
+
 class DomainPackTests(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp(prefix="geoarg-domain-"))
@@ -55,7 +66,7 @@ class DomainPackTests(unittest.TestCase):
         pack_file.rename(self.tmp / "domain.yaml")
         pack = domains.load_domain(self.case)
         self.assertIsNotNone(pack)
-        self.assertEqual(pack["path"], self.tmp / "domain.yaml")
+        self.assertEqual(canonical(pack["path"]), canonical(self.tmp / "domain.yaml"))
 
     def test_unknown_enum_key_is_rejected(self):
         (self.case / "domain.yaml").write_text(

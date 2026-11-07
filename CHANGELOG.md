@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.12.3 - Windows CI conformance
+
+- Fix the domain-pack parent-lookup test to compare canonical paths: the Windows
+  GitHub runner can report `%TEMP%` in its 8.3 short spelling
+  (`C:\Users\RUNNER~1\...`), while `Path.resolve()` expands it to the long
+  spelling, so the same directory compared unequal. No engine behavior change.
+- Refresh the test count in both READMEs (277) and release metadata to 1.12.3.
+
+No engine-digest change in this release; committed cases remain valid.
+
 ## 1.12.2 - stable digests across checkouts
 
 - Digest computation now normalizes CRLF to LF for text files, so `case_digest`, `engine_digest`, attestation digests and evidence-package digests are identical on a Windows checkout and on a clean clone. Binary sources (PDF/DOCX) stay byte-exact.

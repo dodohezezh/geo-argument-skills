@@ -19,7 +19,7 @@ Two agent skills plus a small engine:
 
 The verdict is a lattice, not a score. `UNTESTED` and `UNDETERMINED` are legal and common; they are closer to geology than a confident number.
 
-> **Status: research prototype.** The engine and trust chain are covered by automated tests (272); the method itself has not been empirically evaluated outside the bundled fixtures. The examples demonstrate contracts and the engine, not that the method works. Use it for self-checks, teaching and review support, not as an authoritative conclusion. Chinese: [README.md](README.md).
+> **Status: research prototype.** The engine and trust chain are covered by automated tests (277); the method itself has not been empirically evaluated outside the bundled fixtures. The examples demonstrate contracts and the engine, not that the method works. Use it for self-checks, teaching and review support, not as an authoritative conclusion. Chinese: [README.md](README.md).
 
 ## Quickstart
 
@@ -27,7 +27,7 @@ Clone or download the repository and run these commands from its root.
 
 ```bash
 python -m pip install -e ".[schema]"     # jsonschema enables `schema --validate`; optional
-geoarg --version                         # expected: geoarg 1.12.2
+geoarg --version                         # expected: geoarg 1.12.3
 geoarg check examples/south-atlantic     # expected: OK C1 (0 problem(s))
 geoarg judge examples/south-atlantic     # expected: UNTESTED
 geoarg independence examples/south-atlantic
@@ -95,7 +95,7 @@ Both skills preflight with `geoarg --version`: stop if the engine is missing or 
 
 - Re-running `commit` only replaces the record; if you already ran `attest` or `anchor`, re-run them in the order commit → attest → anchor before `verify` passes again.
 
-## Trust layer (1.12.2)
+## Trust layer (1.12.3)
 
 Before 0.9, `verify` could only compare the case input, engine, verdict, and argument chain. It did not know whether the report handed to a reader came from this commit, and it could not tell whether the ledger had been replaced wholesale. 1.0 adds both:
 
@@ -338,7 +338,7 @@ The field changes reporting and decision value, not the verdict rules:
 - `report` adds a "Counter-evidence records" column to the counter-evidence and prediction tables;
 - `geoarg check` validates the ids (existing and unique); the field is optional, and leaving it out behaves exactly as in 1.9.
 
-## Status and limits (v1.12.2)
+## Status and limits (v1.12.3)
 
 - Does not verify the truth of a claim, only the structure, test status, and quote grounding of the argument.
 - Contracts cost effort; that is the price of a checkable argument.
