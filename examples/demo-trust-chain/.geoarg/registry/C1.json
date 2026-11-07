@@ -4,9 +4,9 @@
     "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
   },
   "claim_id": "C1",
-  "committed_at": "2026-11-07T13:50:39+00:00",
+  "committed_at": "2026-11-07T16:02:09+00:00",
   "domain": null,
-  "engine_sha256": "488e31cedc79f923a3189985a7d74b71214e394787a63b472e241051720b7c5f",
+  "engine_sha256": "73f3bed2cdc5ff0b28198f6346470e380d9636363220999ef359364ec7132b35",
   "flags": [],
   "grounding": {
     "acceptance_rate": 1.0,

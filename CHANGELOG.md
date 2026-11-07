@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.12.4 - report wording for reviewers
+
+- Rewrite the reader-facing wording of reports and cards for a specialist
+  reviewer. Claim kind and layer are now spelled out (`C1（重建类；层级 L4）`)
+  and the report explains what a layer means instead of leaving `L4` bare.
+- Pending items are grouped under a single sentence and no longer repeat
+  "尚未检验" on every line; an event sentence uses corner quotes
+  (`如果 D3「…」成立`) instead of nested parentheses; decisive but decided
+  paragraphs read as complete sentences.
+- Independence warnings are localized instead of leaking English fragments into
+  a Chinese report, and the numbers get a plain-language shape
+  (`独立证据：约 1.2 条（共 3 条记录，平均相关 0.75）`). The raw English
+  `warnings` strings are kept unchanged; the structured `warning_items` beside
+  them are what the wording layer localizes.
+- Rename `草拟引文` to `引文`, `反面证据记录` to `关联的反面证据`, `未附着` to
+  `没有挂到任何证据记录上`, and `文本层：yes` to `文本层：是`; the audit block
+  opens with a one-line "readers can skip this" note.
+- No verdict, grounding, independence or schema change; rule and schema stay at
+  `geoarg/0.7`. Because `independence.py` now exposes `warning_items`, the engine
+  digest changes, so the committed demo trust chain and the maintained cases
+  were re-committed and re-attested.
+
 ## 1.12.3 - Windows CI conformance
 
 - Fix the domain-pack parent-lookup test to compare canonical paths: the Windows

@@ -37,7 +37,10 @@ class ReportModelTest(unittest.TestCase):
     def test_markdown_renders_from_the_same_model(self) -> None:
         text = render(load_case(CASE))
         self.assertTrue(text.startswith("# GeoArg report:"))
-        self.assertIn("about 1.2 lines out of 3 records", text)
+        self.assertIn(
+            "independent evidence: about 1.2 lines (out of 3 records; mean correlation 0.75)",
+            text,
+        )
         self.assertIn("| P1 ", text)
 
     def test_docx_contains_tables_and_the_title(self) -> None:
@@ -181,7 +184,7 @@ class PlainSemanticsTest(unittest.TestCase):
                 yaml.safe_dump(argument, allow_unicode=True, sort_keys=False), encoding="utf-8"
             )
             text = render(load_case(case_dir), "zh")
-        self.assertIn("结论已经「已被推翻」", text)
+        self.assertIn("结论已经被推翻。", text)
         self.assertNotIn("如果 D1", text)
 
     def test_derived_premise_is_labelled_as_another_argument(self) -> None:

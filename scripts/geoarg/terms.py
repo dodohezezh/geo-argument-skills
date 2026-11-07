@@ -25,7 +25,7 @@ PROFILE_LABELS: dict[str, dict[str, str]] = {
 STATUS_LABELS: dict[str, dict[str, str]] = {
     "UNTESTED": {"en": "not tested", "zh": "未检验"},
     "UNDETERMINED": {"en": "undetermined", "zh": "无法判定"},
-    "SUSPENDED": {"en": "weakened by counter-evidence", "zh": "证据被削弱"},
+    "SUSPENDED": {"en": "weakened by counter-evidence", "zh": "被反面证据削弱"},
     "DEFEATED": {"en": "refuted", "zh": "已被推翻"},
     "SUPPORTED": {"en": "supported", "zh": "成立"},
 }
@@ -75,6 +75,27 @@ POWER_LABELS: dict[str, dict[str, str]] = {
     "medium": {"en": "medium", "zh": "中"},
     "low": {"en": "low", "zh": "低"},
     "none": {"en": "none", "zh": "无"},
+}
+
+CLAIM_KIND_LABELS: dict[str, dict[str, str]] = {
+    "reconstruction": {"en": "reconstruction", "zh": "重建类"},
+    "timing": {"en": "timing", "zh": "时间关系"},
+    "correlation": {"en": "correlation", "zh": "相关性"},
+    "mechanism": {"en": "mechanism", "zh": "机制"},
+    "existence": {"en": "existence", "zh": "存在性"},
+    "classification": {"en": "classification", "zh": "分类归属"},
+}
+
+TEXT_LAYER_LABELS: dict[str, dict[str, str]] = {
+    "yes": {"en": "yes", "zh": "是"},
+    "no": {"en": "no", "zh": "否"},
+}
+
+INDEPENDENCE_CLASS_LABELS: dict[str, dict[str, str]] = {
+    "shared-calibration": {"en": "shared calibration", "zh": "共用校准来源"},
+    "data": {"en": "independent data", "zh": "独立数据"},
+    "method": {"en": "same method", "zh": "同一方法"},
+    "physical": {"en": "independent physical evidence", "zh": "独立物性证据"},
 }
 
 GAP_KIND_LABELS: dict[str, dict[str, str]] = {
@@ -167,6 +188,59 @@ def power_label(value: Any, lang: str = "en") -> str:
     if value is None or value == "":
         return "-"
     return _pick(POWER_LABELS, value, lang)
+
+
+def claim_kind_label(value: Any, lang: str = "en") -> str:
+    return _pick(CLAIM_KIND_LABELS, value, lang)
+
+
+def claim_meta(claim: Any, lang: str = "en") -> str:
+    """The claim's id, kind and author-declared layer, in ordinary words."""
+    if not isinstance(claim, dict):
+        return ""
+    ident = str(claim.get("id") or "")
+    kind = claim_kind_label(claim.get("kind"), lang)
+    layer = str(claim.get("layer") or "")
+    if lang == "zh":
+        parts = [part for part in (kind, f"层级 {layer}" if layer else "") if part]
+        return f"{ident}（{'；'.join(parts)}）" if parts else ident
+    parts = [part for part in (kind, f"layer {layer}" if layer else "") if part]
+    return f"{ident} ({'; '.join(parts)})" if parts else ident
+
+
+def text_layer_label(value: Any, lang: str = "en") -> str:
+    return _pick(TEXT_LAYER_LABELS, "yes" if value else "no", lang)
+
+
+def independence_warning(item: dict[str, Any], lang: str = "en") -> str:
+    """One independence warning in plain words; unknown codes pass through."""
+    code = item.get("code")
+    zh = lang == "zh"
+    if code == "shared-sources-not-calibration":
+        ident = item.get("id")
+        shared = ", ".join(str(source) for source in item.get("shared") or [])
+        cls = item.get("class") or ""
+        if zh:
+            class_label = _pick(INDEPENDENCE_CLASS_LABELS, cls, lang) or str(cls)
+            return (
+                f"记录 {ident} 与其他记录共用来源 {shared}，却被标成“{class_label}”；"
+                "共用同一套校准来源的记录不能当成独立证据，要按同一套校准来数。"
+            )
+        return (
+            f"{ident}: shares {item.get('shared')} with other records but is labelled {cls!r}; "
+            "shared calibration must be counted at the calibration level"
+        )
+    if code == "physical-shares-family":
+        ident = item.get("id")
+        family = item.get("family")
+        others = item.get("others") or []
+        if zh:
+            return (
+                f"记录 {ident} 被标成“独立物性证据”，但它和 {others} 属于同一证据家族 "
+                f"{family}。"
+            )
+        return f"{ident}: labelled physical but shares evidence family {family} with {others}"
+    return str(item.get("text") or "")
 
 
 def gap_kind_label(value: Any, lang: str = "en") -> str:
@@ -290,8 +364,14 @@ def _strip_end(text: str) -> str:
     return text.rstrip().rstrip("。.;；!！?？,，、 ")
 
 
-def item_sentence(case: Case, item: dict[str, Any], lang: str = "en") -> str:
-    """One reason in plain words: the author's statement plus what is missing."""
+def item_sentence(
+    case: Case, item: dict[str, Any], lang: str = "en", omit_untested: bool = False
+) -> str:
+    """One reason in plain words: the author's statement plus what is missing.
+
+    ``omit_untested`` drops the bare "not tested yet" tail, for lists that
+    already say so in their heading and would otherwise repeat it per item.
+    """
     kind = str(item.get("kind") or "")
     ident = str(item.get("id") or "")
     state = item.get("state")
@@ -351,7 +431,7 @@ def item_sentence(case: Case, item: dict[str, Any], lang: str = "en") -> str:
         elif item.get("detail"):
             tail = _detail_tail(kind, str(item["detail"]), lang)
         else:
-            tail = "尚未检验" if zh else "it has not been tested"
+            tail = "" if omit_untested else ("尚未检验" if zh else "it has not been tested")
     elif kind == "defeater":
         if state == "established":
             sev = severity_label(item.get("severity"), lang)
@@ -359,7 +439,7 @@ def item_sentence(case: Case, item: dict[str, Any], lang: str = "en") -> str:
         elif item.get("detail"):
             tail = _detail_tail(kind, str(item["detail"]), lang)
         else:
-            tail = "尚未检验" if zh else "it has not been tested"
+            tail = "" if omit_untested else ("尚未检验" if zh else "it has not been tested")
     elif kind == "entailment":
         if state == "failed":
             risk = risk_label(item.get("risk"), lang)
@@ -367,10 +447,12 @@ def item_sentence(case: Case, item: dict[str, Any], lang: str = "en") -> str:
         elif item.get("detail"):
             tail = _detail_tail(kind, str(item["detail"]), lang)
         else:
-            tail = "尚未检验" if zh else "it has not been tested"
+            tail = "" if omit_untested else ("尚未检验" if zh else "it has not been tested")
     else:
         tail = str(state or "")
 
+    if not tail:
+        return f"{base}。" if zh else f"{base}."
     return f"{base}；{tail}。" if zh else f"{base}: {tail}."
 
 
@@ -380,25 +462,26 @@ def event_sentence(case: Case, event: dict[str, Any], lang: str = "en") -> str:
     ident = str(event.get("id") or "")
     statement = _strip_end(statement_of(case, kind, ident))
     zh = lang == "zh"
-    paren = f"（{statement}）" if (zh and statement) else (f" ({statement})" if statement else "")
     if zh:
+        quoted = f"「{statement}」" if statement else ""
         if kind == "premise":
-            return f"如果 {ident}{paren}的证据被撤回"
+            return f"如果 {ident}{quoted}的证据被撤回"
         if kind == "cp":
-            return f"如果 {ident}{paren}不成立"
+            return f"如果 {ident}{quoted}不成立"
         if kind == "defeater":
-            return f"如果 {ident}{paren}成立"
+            return f"如果 {ident}{quoted}成立"
         if kind == "entailment":
-            return f"如果 {ident}{paren}不成立"
+            return f"如果 {ident}{quoted}不成立"
         return f"如果 {ident} 的状态改变"
+    quoted = f"“{statement}”" if statement else ""
     if kind == "premise":
-        return f"If the evidence for {ident}{paren} is withdrawn"
+        return f"If the evidence for {ident}{quoted} is withdrawn"
     if kind == "cp":
-        return f"If {ident}{paren} fails"
+        return f"If {ident}{quoted} fails"
     if kind == "defeater":
-        return f"If {ident}{paren} is established"
+        return f"If {ident}{quoted} is established"
     if kind == "entailment":
-        return f"If {ident}{paren} fails"
+        return f"If {ident}{quoted} fails"
     return f"If the state of {ident} changes"
 
 

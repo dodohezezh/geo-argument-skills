@@ -58,7 +58,7 @@ LABELS: dict[str, dict[str, str]] = {
         "test": "test",
         "severity": "severity",
         "status": "status",
-        "risk": "risk",
+        "risk": "risk if it fails",
         "evidence": "record",
         "declared_page": "declared page",
         "found_page": "page found",
@@ -69,13 +69,13 @@ LABELS: dict[str, dict[str, str]] = {
         "kind": "type",
         "counter_evidence": "Counter-evidence records",
         "description": "description",
-        "n_eff": "independent evidence: about {n_eff} lines out of {total} records (mean correlation {rho})",
+        "n_eff": "independent evidence: about {n_eff} lines (out of {total} records; mean correlation {rho})",
         "families": "fields of evidence: {families}",
         "warning": "independence note: {warning}",
-        "unattached": "calibration declared but not attached: {items}",
+        "unattached": "calibration sources declared but not attached to any evidence record: {items}",
         "no_ledger": "No quote-check record. Transcriptions are unverified.",
         "source": "Source: {path} ({pages} pages, {chars} chars, text layer: {layer}).",
-        "acceptance": "Quotes that match the source: {rate} ({grounded}/{drafted} drafted quotes checked).",
+        "acceptance": "Quotes that match the source: {rate} ({grounded}/{drafted} quotes checked).",
         "problem": "Problem: {text}",
         "warning_row": "Warning: {text}",
         "na": "n/a",
@@ -85,7 +85,7 @@ LABELS: dict[str, dict[str, str]] = {
         "decisive_none_suspended": "The conclusion is already weakened. It recovers only if the counter-evidence above is answered or withdrawn; no other single outcome changes it.",
         "decisive_note": "Single outcomes only; combinations of weakening counter-evidence are not listed. cost is the cheapest declared test cost, in the same unit as test.yaml.",
         "brief_title": "GeoArg brief: {title}",
-        "brief_line": "Conclusion {verdict}: {hard} fatal, {soft} weakening, {pending} still without a result. Quotes matching the source {rate}. Independent evidence about {n_eff} of {total}.",
+        "brief_line": "Conclusion {verdict}: {hard} fatal, {soft} weakening, {pending} still without a result. Quotes matching the source {rate}. Independent evidence about {n_eff} lines out of {total} records.",
         "brief_summary": "Essentials",
         "brief_more": "{more} more in the full report.",
         "brief_only": "This brief lists the essentials. Run `geoarg report <case>` for the full report.",
@@ -93,6 +93,8 @@ LABELS: dict[str, dict[str, str]] = {
         "brief_warnings": "independence notes: {count}",
         "gaps_line": "recorded gaps: {count} (blocking: {blocking})",
         "no_ledger_short": "no quote-check record (transcriptions unverified)",
+        "layer_note": "The claim layer is author-declared: L0 is a definition, L4 an interpretation. It does not change the verdict.",
+        "audit_skip": "The lines below are checksums and versions for verification; readers can skip them.",
     },
     "zh": {
         "title": "GeoArg 报告：{title}",
@@ -124,7 +126,7 @@ LABELS: dict[str, dict[str, str]] = {
         "test": "检验",
         "severity": "严重程度",
         "status": "状态",
-        "risk": "风险",
+        "risk": "不成立时的风险",
         "evidence": "记录",
         "declared_page": "声明页码",
         "found_page": "实际页码",
@@ -133,25 +135,25 @@ LABELS: dict[str, dict[str, str]] = {
         "cost": "成本",
         "result": "结论会变成",
         "kind": "类型",
-        "counter_evidence": "反面证据记录",
+        "counter_evidence": "关联的反面证据",
         "description": "说明",
-        "n_eff": "独立证据：约 {n_eff} 条 / {total} 条记录（平均相关 {rho}）",
+        "n_eff": "独立证据：约 {n_eff} 条（共 {total} 条记录，平均相关 {rho}）",
         "families": "证据领域：{families}",
         "warning": "独立性提示：{warning}",
-        "unattached": "声明了但未附着的校准：{items}",
+        "unattached": "作者声明了、但没有挂到任何证据记录上的校准来源：{items}",
         "no_ledger": "没有引文核对记录，转录内容未经验证。",
         "source": "来源：{path}（{pages} 页，{chars} 字符，文本层：{layer}）。",
-        "acceptance": "引文与原文一致的比例：{rate}（{grounded}/{drafted} 条草拟引文已核对）。",
+        "acceptance": "引文与原文一致的比例：{rate}（{grounded}/{drafted} 条引文已核对）。",
         "problem": "问题：{text}",
         "warning_row": "提示：{text}",
         "na": "不适用",
         "decisive_intro": "当前结论：{verdict}。下面每一行都是一种单独就会改变结论的情况：",
         "decisive_none": "没有找到。主张已经有结论，或者这份论证没有未决项。",
-        "decisive_none_defeated": "结论已经「已被推翻」。上面列出的反面证据必须被撤回或被推翻，主张才可能恢复；没有其他单事件会改变它。",
-        "decisive_none_suspended": "结论已经「证据被削弱」。上面列出的反面证据必须被回应或撤回，支持才可能恢复；没有其他单事件会改变它。",
+        "decisive_none_defeated": "结论已经被推翻。上面列出的反面证据必须被撤回或被推翻，主张才可能恢复；没有其他单事件会改变它。",
+        "decisive_none_suspended": "结论已经被反面证据削弱。上面列出的反面证据必须被回应或撤回，支持才可能恢复；没有其他单事件会改变它。",
         "decisive_note": "只列单事件结果；多条削弱性反面证据同时成立的情形没有列出。成本取作者声明的最低检验成本，单位同 test.yaml。",
         "brief_title": "GeoArg 简报：{title}",
-        "brief_line": "结论 {verdict}：{hard} 条足以推翻，{soft} 条削弱支持，{pending} 项还没有结果。引文与原文一致的比例 {rate}。独立证据约 {n_eff} / {total} 条。",
+        "brief_line": "结论 {verdict}：{hard} 条足以推翻，{soft} 条削弱支持，{pending} 项还没有结果。引文与原文一致的比例 {rate}。独立证据约 {n_eff} 条（共 {total} 条记录）。",
         "brief_summary": "要点",
         "brief_more": "另有 {more} 条见完整报告。",
         "brief_only": "本简报只列要点。完整报告运行 `geoarg report <case>`。",
@@ -159,6 +161,8 @@ LABELS: dict[str, dict[str, str]] = {
         "brief_warnings": "独立性提示：{count} 条",
         "gaps_line": "记录的问题：{count} 条（阻塞：{blocking}）",
         "no_ledger_short": "没有引文核对记录（转录内容未经验证）",
+        "layer_note": "层级由作者标注：L0 是定义，L4 是解释；它不改变本工具给出的结论。",
+        "audit_skip": "以下为核对用的哈希与版本号，读者可以跳过。",
     },
 }
 
@@ -252,7 +256,7 @@ def build(case: Case, lang: str = "en", judgment: str | None = None) -> dict:
     claim = case.claim
 
     meta: list[tuple[str, str]] = [
-        (L["claim"], f"{claim.get('id')} ({claim.get('kind')}, {claim.get('layer')})"),
+        (L["claim"], terms.claim_meta(claim, lang)),
         (L["statement"], str(claim.get("statement", ""))),
         (L["field"], terms.profile_label(case, lang)),
         (L["verdict"], terms.status_label(result["verdict"], lang)),
@@ -264,6 +268,8 @@ def build(case: Case, lang: str = "en", judgment: str | None = None) -> dict:
         sections.append({"heading": L["judgement"], "blocks": _judgement_blocks(judgment)})
 
     why: list[Block] = [("p", terms.status_explanation(result["verdict"], lang))]
+    if claim.get("layer"):
+        why.append(("note", L["layer_note"]))
     items = result.get("reason_items") or []
     if items:
         for bucket in ("hard", "soft", "pending"):
@@ -272,7 +278,7 @@ def build(case: Case, lang: str = "en", judgment: str | None = None) -> dict:
             why.append(
                 (
                     "bullets",
-                    [terms.item_sentence(case, item, lang) for item in bucket_items] or [L["none"]],
+                    [terms.item_sentence(case, item, lang, omit_untested=(bucket == "pending")) for item in bucket_items] or [L["none"]],
                 )
             )
     else:
@@ -366,7 +372,10 @@ def build(case: Case, lang: str = "en", judgment: str | None = None) -> dict:
         L["n_eff"].format(n_eff=indep["n_eff"], total=indep["n_records"], rho=indep["mean_rho"]),
         L["families"].format(families=", ".join(indep["families"]) or L["none"]),
     ]
-    indep_lines.extend(L["warning"].format(warning=warning) for warning in indep["warnings"])
+    warning_texts = [
+        terms.independence_warning(item, lang) for item in (indep.get("warning_items") or [])
+    ] or list(indep["warnings"])
+    indep_lines.extend(L["warning"].format(warning=warning) for warning in warning_texts)
     for excluded in indep["excluded_records"]:
         indep_lines.append(L["excluded"].format(id=excluded["id"], status=excluded["status"]))
     if indep["declared_calibration_not_attached"]:
@@ -396,7 +405,7 @@ def build(case: Case, lang: str = "en", judgment: str | None = None) -> dict:
                     path=pdf["path"],
                     pages=extracted["pages"],
                     chars=extracted["chars"],
-                    layer="yes" if extracted["text_layer"] else "no",
+                    layer=terms.text_layer_label(extracted["text_layer"], lang),
                 ),
             )
         )
@@ -468,7 +477,10 @@ def build(case: Case, lang: str = "en", judgment: str | None = None) -> dict:
     sections.append(
         {
             "heading": L["audit"],
-            "blocks": [("bullets", _audit_lines(case, ledger, L, lang, judgment))],
+            "blocks": [
+                ("note", L["audit_skip"]),
+                ("bullets", _audit_lines(case, ledger, L, lang, judgment)),
+            ],
         }
     )
 
@@ -488,7 +500,7 @@ def build_brief(case: Case, lang: str = "en", judgment: str | None = None) -> di
     claim = case.claim
 
     meta: list[tuple[str, str]] = [
-        (L["claim"], f"{claim.get('id')} ({claim.get('kind')}, {claim.get('layer')})"),
+        (L["claim"], terms.claim_meta(claim, lang)),
         (L["statement"], str(claim.get("statement", ""))),
         (L["field"], terms.profile_label(case, lang)),
     ]

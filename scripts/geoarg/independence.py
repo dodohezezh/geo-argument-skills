@@ -151,6 +151,7 @@ def report(case: Case) -> dict[str, Any]:
         )
 
     warnings = []
+    warning_items = []
     for record in records:
         ind = record.get("independence", {}) or {}
         shared = ind.get("shared_sources") or []
@@ -159,6 +160,14 @@ def report(case: Case) -> dict[str, Any]:
             warnings.append(
                 f"{record.get('id')}: shares {shared} with other records but is labelled "
                 f"{rec_class!r}; shared calibration must be counted at the calibration level"
+            )
+            warning_items.append(
+                {
+                    "code": "shared-sources-not-calibration",
+                    "id": record.get("id"),
+                    "shared": list(shared),
+                    "class": rec_class,
+                }
             )
         if rec_class == "physical" and ind.get("family"):
             same_family = [
@@ -171,6 +180,14 @@ def report(case: Case) -> dict[str, Any]:
                 warnings.append(
                     f"{record.get('id')}: labelled physical but shares evidence family "
                     f"{ind.get('family')} with {same_family}"
+                )
+                warning_items.append(
+                    {
+                        "code": "physical-shares-family",
+                        "id": record.get("id"),
+                        "family": ind.get("family"),
+                        "others": same_family,
+                    }
                 )
 
     families = sorted({(r.get("independence", {}) or {}).get("family") for r in records if r.get("independence")})
@@ -185,6 +202,7 @@ def report(case: Case) -> dict[str, Any]:
         "families": families,
         "pairs": pairs,
         "warnings": warnings,
+        "warning_items": warning_items,
         "excluded_records": excluded,
         "declared_calibration_not_attached": undeclared,
         "counter": _counter_report(case),

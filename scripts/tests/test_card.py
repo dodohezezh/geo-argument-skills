@@ -47,7 +47,10 @@ class ResearcherCardTest(unittest.TestCase):
         self.assertIn("## What to check next", text)
         self.assertIn("## Numbers", text)
         self.assertIn("not tested", text)
-        self.assertIn("about 1.2 lines out of 3 records", text)
+        self.assertIn(
+            "independent evidence: about 1.2 lines (out of 3 records; mean correlation 0.75)",
+            text,
+        )
         self.assertIn("T7", text)
         self.assertNotIn("## What would change the conclusion", text)
         self.assertNotIn("## Conclusion and reasons", text)

@@ -5,7 +5,7 @@ abstract: "geoarg compiles a geological argument into a structured contract, jud
 type: software
 authors:
   - name: "GeoArg contributors"
-version: "1.12.3"
+version: "1.12.4"
 date-released: "2026-11-07"
 license: MIT
 repository: ""

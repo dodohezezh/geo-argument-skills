@@ -82,18 +82,18 @@ PAGES: dict[str, dict[str, str]] = {
         "paths_intro": "Current conclusion: {verdict}. Each row is one single outcome that would change it:",
         "paths_note": "Single outcomes only; combinations of weakening counter-evidence are not listed. cost is the cheapest declared test cost, in the same unit as test.yaml.",
         "paths_none_defeated": "The conclusion is already refuted. It can recover only if the counter-evidence above is withdrawn or itself refuted; no other single outcome changes it.",
-        "paths_none_suspended": "The conclusion is already weakened. It recovers only if the counter-evidence above is answered or withdrawn; no other single outcome changes it.",
+        "paths_none_suspended": "The conclusion is already weakened by counter-evidence. It recovers only if the counter-evidence above is answered or withdrawn; no other single outcome changes it.",
         "evidence_heading": "Evidence and independence",
         "chain_intro": "This argument counts {n} evidence records into its independence estimate; the shared sources and classes the author declared imply a mean correlation of {rho}, leaving about {n_eff} independent lines of evidence.",
         "chain_calibration": "{count} record(s) share a source or a calibration.",
         "chain_excluded": "{count} record(s) are left out because their status is disputed or retracted.",
-        "chain_unattached": "The calibration the author declared ({items}) is not attached to any record.",
+        "chain_unattached": "The calibration the author declared ({items}) is not attached to any evidence record.",
         "caveat": "This conclusion covers only the conditions and evidence written into this argument. The tool does not rerun experiments and does not decide whether the claim is true.",
-        "n_eff": "independent evidence: about {n_eff} lines out of {total} records (mean correlation {rho})",
+        "n_eff": "independent evidence: about {n_eff} lines (out of {total} records; mean correlation {rho})",
         "families": "fields of evidence: {families}",
         "warning": "independence note: {warning}",
         "excluded": "left out of the independence count: {id} ({status})",
-        "unattached": "calibration declared but not attached: {items}",
+        "unattached": "calibration sources declared but not attached to any evidence record: {items}",
         "outcome": "if this happens",
         "test": "test",
         "power": "power",
@@ -108,7 +108,7 @@ PAGES: dict[str, dict[str, str]] = {
         "found_page": "page found",
         "no_ledger": "No quote-check record. Transcriptions are unverified.",
         "source": "Source: {path} ({pages} pages, {chars} chars, text layer: {layer}).",
-        "acceptance": "Quotes that match the source: {rate} ({grounded}/{drafted} drafted quotes checked).",
+        "acceptance": "Quotes that match the source: {rate} ({grounded}/{drafted} quotes checked).",
         "problem": "Problem: {text}",
         "warning_row": "Warning: {text}",
         "na": "n/a",
@@ -158,19 +158,19 @@ PAGES: dict[str, dict[str, str]] = {
         "paths_heading": "哪些结果会改变结论",
         "paths_intro": "当前结论：{verdict}。下面每一行都是一种单独就会改变结论的情况：",
         "paths_note": "只列单事件结果；多条削弱性反面证据同时成立的情形没有列出。成本取作者声明的最低检验成本，单位同 test.yaml。",
-        "paths_none_defeated": "结论已经「已被推翻」。上面列出的反面证据必须被撤回或被推翻，主张才可能恢复；没有其他单事件会改变它。",
-        "paths_none_suspended": "结论已经「证据被削弱」。上面列出的反面证据必须被回应或撤回，支持才可能恢复；没有其他单事件会改变它。",
+        "paths_none_defeated": "结论已经被推翻。上面列出的反面证据必须被撤回或被推翻，主张才可能恢复；没有其他单事件会改变它。",
+        "paths_none_suspended": "结论已经被反面证据削弱。上面列出的反面证据必须被回应或撤回，支持才可能恢复；没有其他单事件会改变它。",
         "evidence_heading": "证据与独立性",
         "chain_intro": "这份论证把 {n} 条证据记录计入独立性估算；按作者声明的共同来源和类别，平均相关为 {rho}，约合 {n_eff} 条相互独立的证据。",
         "chain_calibration": "其中 {count} 条记录因共享来源或校准而不独立。",
         "chain_excluded": "另有 {count} 条记录因状态为争议或撤回而未计入。",
-        "chain_unattached": "作者声明的校准（{items}）没有附着到任何记录。",
+        "chain_unattached": "作者声明的校准来源（{items}）没有挂到任何证据记录上。",
         "caveat": "这个结论只覆盖这份论证写下的条件和证据；工具不重跑实验，也不判定主张真假。",
-        "n_eff": "独立证据：约 {n_eff} 条 / {total} 条记录（平均相关 {rho}）",
+        "n_eff": "独立证据：约 {n_eff} 条（共 {total} 条记录，平均相关 {rho}）",
         "families": "证据领域：{families}",
         "warning": "独立性提示：{warning}",
         "excluded": "未计入独立性：{id}（{status}）",
-        "unattached": "声明了但未附着的校准：{items}",
+        "unattached": "作者声明了、但没有挂到任何证据记录上的校准来源：{items}",
         "outcome": "如果发生什么",
         "test": "检验",
         "power": "区分力",
@@ -185,7 +185,7 @@ PAGES: dict[str, dict[str, str]] = {
         "found_page": "实际页码",
         "no_ledger": "没有引文核对记录，转录内容未经验证。",
         "source": "来源：{path}（{pages} 页，{chars} 字符，文本层：{layer}）。",
-        "acceptance": "引文与原文一致的比例：{rate}（{grounded}/{drafted} 条草拟引文已核对）。",
+        "acceptance": "引文与原文一致的比例：{rate}（{grounded}/{drafted} 条引文已核对）。",
         "problem": "问题：{text}",
         "warning_row": "提示：{text}",
         "na": "不适用",
@@ -326,7 +326,7 @@ def _grounding_blocks(
                     path=pdf["path"],
                     pages=extracted["pages"],
                     chars=extracted["chars"],
-                    layer="yes" if extracted["text_layer"] else "no",
+                    layer=terms.text_layer_label(extracted["text_layer"], lang),
                 ),
             )
         )
@@ -583,7 +583,10 @@ def _reviewer_sections(
         labels["n_eff"].format(n_eff=indep["n_eff"], total=indep["n_records"], rho=indep["mean_rho"]),
         labels["families"].format(families=", ".join(indep["families"]) or labels["na"]),
     ]
-    evidence_lines.extend(labels["warning"].format(warning=warning) for warning in indep["warnings"])
+    warning_texts = [
+        terms.independence_warning(item, lang) for item in (indep.get("warning_items") or [])
+    ] or list(indep["warnings"])
+    evidence_lines.extend(labels["warning"].format(warning=warning) for warning in warning_texts)
     for excluded in indep["excluded_records"]:
         evidence_lines.append(
             labels["excluded"].format(id=excluded["id"], status=excluded["status"])
@@ -642,7 +645,7 @@ def build_card(
 
     claim = case.claim
     meta = [
-        (labels["claim"], f"{claim.get('id')} ({claim.get('kind')}, {claim.get('layer')})"),
+        (labels["claim"], terms.claim_meta(claim, lang)),
         (labels["verdict"], terms.status_label(result["verdict"], lang)),
         (labels["audience"], labels[f"audience_{role}"]),
         (labels["field"], terms.profile_label(case, lang)),
